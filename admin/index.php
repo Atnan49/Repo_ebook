@@ -19,15 +19,6 @@ try {
     $totalEbooks = $db->query("SELECT COUNT(*) FROM ebooks WHERE status='approved'")->fetchColumn();
     $totalPending = $db->query("SELECT COUNT(*) FROM ebooks WHERE status='pending'")->fetchColumn();
 
-    // Fetch Pending Ebooks
-    $stmt = $db->query("SELECT e.*, c.name as category_name, u.name as uploader_name 
-                        FROM ebooks e
-                        LEFT JOIN categories c ON e.category_id = c.id
-                        LEFT JOIN users u ON e.uploaded_by = u.id
-                        WHERE e.status = 'pending'
-                        ORDER BY e.created_at ASC");
-    $pendingBooks = $stmt->fetchAll();
-
 } catch (PDOException $e) {
     die("Terjadi kesalahan database.");
 }
@@ -48,19 +39,11 @@ try {
         .stat-card h4 { color: #64748b; font-size: 14px; margin-bottom: 8px; text-transform: uppercase; }
         .stat-card .num { font-size: 32px; font-weight: 700; color: #0f172a; }
         
-        .pending-list { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; }
-        .pending-list h3 { padding: 20px; border-bottom: 1px solid #f1f5f9; margin: 0; }
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; font-weight: 600; color: #475569; font-size: 14px; }
-        td { color: #334155; font-size: 15px; }
-        tr:last-child td { border-bottom: none; }
-        
-        .btn-action { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; text-decoration: none; display: inline-block; margin-right: 8px; }
-        .btn-approve { background: #10b981; color: white; }
-        .btn-reject { background: #ef4444; color: white; }
-        .btn-view { background: #3b82f6; color: white; }
+        .welcome-panel { background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; padding: 40px; border-radius: 16px; margin-bottom: 40px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); }
+        .welcome-panel h3 { font-size: 28px; margin-bottom: 12px; }
+        .welcome-panel p { font-size: 16px; opacity: 0.9; max-width: 600px; line-height: 1.6; }
+        .btn-check-mod { display: inline-block; margin-top: 20px; padding: 12px 24px; background: white; color: #4f46e5; font-weight: bold; border-radius: 8px; text-decoration: none; transition: 0.2s; }
+        .btn-check-mod:hover { background: #f8fafc; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -75,17 +58,13 @@ try {
                         <h2>Dashboard Admin</h2>
                     </div>
 
-                    <?php if ($msg = getFlash('success')): ?>
-                        <div class="flash-msg success" style="margin-bottom:20px; padding:16px; background:#ecfdf5; color:#047857; border-radius:8px; border-left:4px solid #10b981;">
-                            <?= e($msg) ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($msg = getFlash('error')): ?>
-                        <div class="flash-msg error" style="margin-bottom:20px; padding:16px; background:#fef2f2; color:#b91c1c; border-radius:8px; border-left:4px solid #ef4444;">
-                            <?= e($msg) ?>
-                        </div>
-                    <?php endif; ?>
+                    <div class="welcome-panel">
+                        <h3>Selamat Datang, <?= e($user['name']) ?>!</h3>
+                        <p>Kelola koleksi repositori ebook dengan mudah. Anda memiliki kendali penuh atas persetujuan buku dan pengguna.</p>
+                        <?php if ($totalPending > 0): ?>
+                            <a href="moderasi.php" class="btn-check-mod">Cek Moderasi (<?= $totalPending ?> Menunggu)</a>
+                        <?php endif; ?>
+                    </div>
 
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -99,56 +78,6 @@ try {
                         <div class="stat-card" style="border-left: 4px solid #f59e0b;">
                             <h4>Menunggu Persetujuan</h4>
                             <div class="num"><?= number_format($totalPending) ?></div>
-                        </div>
-                    </div>
-
-                    <div class="pending-list">
-                        <h3>Antrean Persetujuan Ebook</h3>
-                        <div class="table-responsive">
-                            <?php if (empty($pendingBooks)): ?>
-                                <div style="padding: 40px 20px; text-align: center; color: #64748b;">
-                                    Tidak ada ebook yang menunggu persetujuan saat ini.
-                                </div>
-                            <?php else: ?>
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Judul Buku</th>
-                                            <th>Pengunggah</th>
-                                            <th>Kategori</th>
-                                            <th>Tanggal</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($pendingBooks as $book): ?>
-                                            <tr>
-                                                <td style="font-weight: 600;"><?= e($book['title']) ?></td>
-                                                <td><?= e($book['uploader_name']) ?></td>
-                                                <td><?= e($book['category_name'] ?? 'Umum') ?></td>
-                                                <td><?= date('d M Y', strtotime($book['created_at'])) ?></td>
-                                                <td>
-                                                    <a href="<?= BASE_URL ?>/detail.php?id=<?= $book['id'] ?>" class="btn-action btn-view" target="_blank">Lihat</a>
-                                                    
-                                                    <form action="action.php" method="POST" style="display:inline;">
-                                                        <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
-                                                        <input type="hidden" name="id" value="<?= $book['id'] ?>">
-                                                        <input type="hidden" name="action" value="approve">
-                                                        <button type="submit" class="btn-action btn-approve" onclick="return confirm('Setujui ebook ini?')">Setujui</button>
-                                                    </form>
-                                                    
-                                                    <form action="action.php" method="POST" style="display:inline;">
-                                                        <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
-                                                        <input type="hidden" name="id" value="<?= $book['id'] ?>">
-                                                        <input type="hidden" name="action" value="reject">
-                                                        <button type="submit" class="btn-action btn-reject" onclick="return confirm('Tolak ebook ini?')">Tolak</button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            <?php endif; ?>
                         </div>
                     </div>
 

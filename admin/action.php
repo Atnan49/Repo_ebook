@@ -35,4 +35,5 @@ if ($id > 0 && in_array($action, ['approve', 'reject'])) {
     }
 }
 
-redirect('index.php');
+$redirectPage = $_POST['redirect'] ?? 'index.php';
+redirect($redirectPage);
