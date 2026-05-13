@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              } elseif ($img['size'] > 5 * 1024 * 1024) { // 5MB Max
                  $errors[] = 'Ukuran cover maksimal 5MB.';
              } else {
-                 $coverName = uniqid('cover_') . '.' . $imgExt;
+                 $coverName = uniqid('cover_') . '.webp';
              }
         }
 
@@ -78,9 +78,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (move_uploaded_file($pdf['tmp_name'], $pdfDest)) {
                 // Move Cover
-                if ($coverName) {
+                if ($coverName && !empty($_FILES['cover_image']['tmp_name'])) {
                     if (!is_dir(COVER_STORAGE)) mkdir(COVER_STORAGE, 0755, true);
-                    move_uploaded_file($_FILES['cover_image']['tmp_name'], COVER_STORAGE . '/' . $coverName);
+                    
+                    $coverTmpPath = $_FILES['cover_image']['tmp_name'];
+                    $coverDestPath = COVER_STORAGE . '/' . $coverName;
+                    
+                    // Auto convert to WebP
+                    $image = false;
+                    if (in_array($imgExt, ['jpg', 'jpeg'])) {
+                        $image = @imagecreatefromjpeg($coverTmpPath);
+                    } elseif ($imgExt === 'png') {
+                        $image = @imagecreatefrompng($coverTmpPath);
+                        if ($image) {
+                            imagepalettetotruecolor($image);
+                            imagealphablending($image, true);
+                            imagesavealpha($image, true);
+                        }
+                    } elseif ($imgExt === 'webp') {
+                        $image = @imagecreatefromwebp($coverTmpPath);
+                    }
+                    
+                    if ($image !== false) {
+                        imagewebp($image, $coverDestPath, 85); // 85 is quality
+                        imagedestroy($image);
+                    } else {
+                        // Fallback if GD fails
+                        move_uploaded_file($coverTmpPath, $coverDestPath);
+                    }
                 }
 
                 // Generate slug
