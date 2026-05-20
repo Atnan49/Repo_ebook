@@ -134,7 +134,7 @@ try {
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/../assets/css/style.css">
+    <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/style.css">
 </head>
 <body>
     <div class="app-layout">
@@ -184,7 +184,7 @@ try {
                         <?php if (!empty($popularBooks)): ?>
                             <?php foreach ($popularBooks as $pop): ?>
                                 <a href="<?= BASE_URL ?>/detail.php?id=<?= $pop['id'] ?>" class="hero-book-card">
-                                    <img src="<?= $pop['cover_image'] ? BASE_URL . '/../assets/covers/' . e($pop['cover_image']) : BASE_URL . '/../assets/img/default-cover.jpg' ?>" 
+                                    <img src="<?= $pop['cover_image'] ? ASSET_URL . '/assets/covers/' . e($pop['cover_image']) : ASSET_URL . '/assets/img/default-cover.jpg' ?>" 
                                          alt="<?= e($pop['title']) ?>">
                                 </a>
                             <?php endforeach; ?>
@@ -257,7 +257,7 @@ try {
                             <?php foreach ($books as $book): ?>
                                 <a href="<?= BASE_URL ?>/detail.php?id=<?= $book['id'] ?>" class="book-card" id="book-<?= $book['id'] ?>">
                                     <div class="book-cover">
-                                        <img src="<?= $book['cover_image'] ? BASE_URL . '/../assets/covers/' . e($book['cover_image']) : BASE_URL . '/../assets/img/default-cover.jpg' ?>" 
+                                        <img src="<?= $book['cover_image'] ? ASSET_URL . '/assets/covers/' . e($book['cover_image']) : ASSET_URL . '/assets/img/default-cover.jpg' ?>" 
                                              alt="<?= e($book['title']) ?>"
                                              loading="lazy">
                                         <?php if (isLoggedIn()): ?>
@@ -323,6 +323,6 @@ try {
     </div>
 
     <!-- JavaScript -->
-    <script src="<?= BASE_URL ?>/../assets/js/app.js"></script>
+    <script src="<?= ASSET_URL ?>/assets/js/app.js"></script>
 </body>
 </html>

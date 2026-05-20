@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="description" content="Daftar akun RepoBook untuk mengakses ribuan ebook gratis.">
     <title><?= e($pageTitle) ?></title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/../assets/css/style.css">
+    <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/style.css">
 </head>
 <body>
     <div class="auth-page">

@@ -12,6 +12,7 @@ services:
       - DB_USER=root
       - DB_PASS=rootpassword
       - BASE_URL=
+      - ASSET_URL=
     depends_on:
       - db
 

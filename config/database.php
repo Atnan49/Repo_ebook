@@ -1,12 +1,4 @@
 <?php
-/**
- * ============================================================
- * DATABASE CONNECTION - PDO
- * ============================================================
- * Koneksi ke MySQL menggunakan PDO dengan error handling,
- * charset UTF-8, dan prepared statements sebagai default.
- */
-
 // Konfigurasi Database — mendukung ENV dari Docker maupun default lokal
 define('DB_HOST',    getenv('DB_HOST')    ?: 'localhost');
 define('DB_PORT',    getenv('DB_PORT')    ?: '3306');
@@ -16,7 +8,8 @@ define('DB_PASS',    getenv('DB_PASS')    ?: '');
 define('DB_CHARSET', 'utf8mb4');
 
 // Base URL & Path
-define('BASE_URL',   getenv('BASE_URL')   ?: '/Projek/Repo_ebook/public');
+define('BASE_URL',   getenv('BASE_URL') !== false ? getenv('BASE_URL') : '/Projek/Repo_ebook/public');
+define('ASSET_URL',  getenv('ASSET_URL') !== false ? getenv('ASSET_URL') : '/Projek/Repo_ebook');
 define('ROOT_PATH',  dirname(__DIR__));
 
 define('STORAGE_PATH', ROOT_PATH . '/storage');

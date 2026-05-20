@@ -100,7 +100,7 @@ $user = currentUser();
         <div class="nav-section">
             <span class="nav-label">ADMIN</span>
 
-            <a href="<?= BASE_URL ?>/../admin/index.php" 
+            <a href="<?= ASSET_URL ?>/admin/index.php" 
                class="nav-link <?= $currentPage === 'index.php' && strpos($_SERVER['PHP_SELF'], '/admin/') !== false ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -110,7 +110,7 @@ $user = currentUser();
                 <span class="nav-text">Dashboard</span>
             </a>
 
-            <a href="<?= BASE_URL ?>/../admin/moderasi.php" 
+            <a href="<?= ASSET_URL ?>/admin/moderasi.php" 
                class="nav-link <?= $currentPage === 'moderasi.php' ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>

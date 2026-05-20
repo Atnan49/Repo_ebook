@@ -69,7 +69,7 @@ $pageTitle = e($book['title']) . ' - RepoBook';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/../assets/css/style.css">
+    <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/style.css">
     <style>
         .detail-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
         .detail-card { display: flex; flex-direction: column; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 30px; }
@@ -111,7 +111,7 @@ $pageTitle = e($book['title']) . ' - RepoBook';
 
                     <div class="detail-card">
                         <div class="detail-cover">
-                            <img src="<?= $book['cover_image'] ? BASE_URL . '/../assets/covers/' . e($book['cover_image']) : BASE_URL . '/../assets/img/default-cover.jpg' ?>" alt="<?= e($book['title']) ?>">
+                            <img src="<?= $book['cover_image'] ? ASSET_URL . '/assets/covers/' . e($book['cover_image']) : ASSET_URL . '/assets/img/default-cover.jpg' ?>" alt="<?= e($book['title']) ?>">
                         </div>
                         <div class="detail-info">
                             <div>
@@ -174,6 +174,6 @@ $pageTitle = e($book['title']) . ' - RepoBook';
     <script>
         const BASE_URL = '<?= BASE_URL ?>';
     </script>
-    <script src="<?= BASE_URL ?>/../assets/js/app.js"></script>
+    <script src="<?= ASSET_URL ?>/assets/js/app.js"></script>
 </body>
 </html>
