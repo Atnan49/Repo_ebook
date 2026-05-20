@@ -1,0 +1,21 @@
+# Upload files (user-generated content)
+storage/pdfs/*
+assets/covers/*
+
+# Keep directories via .gitkeep
+!storage/pdfs/.gitkeep
+!assets/covers/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env

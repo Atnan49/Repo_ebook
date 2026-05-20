@@ -24,6 +24,25 @@ RepoBook adalah aplikasi web repositori buku digital (ebook) interaktif yang mem
 
 ## Cara Instalasi 🚀
 
+### Opsi A — Docker (Rekomendasi) 🐳
+
+Cukup jalankan satu perintah dan semua (PHP, Apache, MySQL, phpMyAdmin) langsung siap:
+
+```bash
+git clone https://github.com/Atnan49/Repo_ebook.git
+cd Repo_ebook
+docker compose up -d --build
+```
+
+| Layanan     | URL                          |
+|-------------|------------------------------|
+| Aplikasi    | http://localhost:8080         |
+| phpMyAdmin  | http://localhost:8081         |
+
+> **Catatan:** Akun admin bawaan — email `admin@repo.com`, password `Password`.
+
+### Opsi B — XAMPP / Manual
+
 1. **Kloning repositori ini** ke dalam direktori server lokal Anda (misal: `htdocs` untuk XAMPP):
    ```bash
    git clone https://github.com/Atnan49/Repo_ebook.git

@@ -7,17 +7,18 @@
  * charset UTF-8, dan prepared statements sebagai default.
  */
 
-// Konfigurasi Database
-define('DB_HOST', 'localhost');
-define('DB_PORT', '3306');
-define('DB_NAME', 'repo_ebook');
-define('DB_USER', 'root');
-define('DB_PASS', '');          // Sesuaikan jika ada password
+// Konfigurasi Database — mendukung ENV dari Docker maupun default lokal
+define('DB_HOST',    getenv('DB_HOST')    ?: 'localhost');
+define('DB_PORT',    getenv('DB_PORT')    ?: '3306');
+define('DB_NAME',    getenv('DB_NAME')    ?: 'repo_ebook');
+define('DB_USER',    getenv('DB_USER')    ?: 'root');
+define('DB_PASS',    getenv('DB_PASS')    ?: '');
 define('DB_CHARSET', 'utf8mb4');
 
 // Base URL & Path
-define('BASE_URL', '/Projek/Repo_ebook/public');
-define('ROOT_PATH', dirname(__DIR__));
+define('BASE_URL',   getenv('BASE_URL')   ?: '/Projek/Repo_ebook/public');
+define('ROOT_PATH',  dirname(__DIR__));
+
 define('STORAGE_PATH', ROOT_PATH . '/storage');
 define('PDF_STORAGE', STORAGE_PATH . '/pdfs');
 define('COVER_STORAGE', ROOT_PATH . '/assets/covers');
