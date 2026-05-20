@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Masuk ke akun RepoBook Anda.">
     <title><?= e($pageTitle) ?></title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <link rel="icon" type="image/x-icon" href="<?= ASSET_URL ?>/favicon.ico">
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/style.css">
 </head>
 <body>
