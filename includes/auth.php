@@ -1,14 +1,16 @@
 <?php
-/**
- * ============================================================
- * AUTH HELPER
- * ============================================================
- * Fungsi-fungsi untuk autentikasi dan otorisasi.
- * Wajib di-include di setiap halaman yang memerlukan session.
- */
+
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+
+// Mencegah browser melakukan caching pada halaman dinamis berbasis session
+if (!headers_sent()) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 }
 
 /**
@@ -83,6 +85,11 @@ function logoutUser(): void
         );
     }
     session_destroy();
+
+    // Mulai session baru yang bersih agar flash message setelah logout bisa disimpan
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
 }
 
 /**

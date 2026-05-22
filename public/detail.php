@@ -93,6 +93,8 @@ $pageTitle = e($book['title']) . ' - RepoBook';
         .btn-bookmark { background: #f1f5f9; color: #475569; padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 16px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
         .btn-bookmark:hover { background: #e2e8f0; }
         .btn-bookmark.saved { background: #fce7f3; color: #be185d; }
+        .btn-delete { background: var(--danger); color: white; padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 16px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+        .btn-delete:hover { background: #b91c1c; }
         .uploader-info { margin-top: 30px; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
@@ -156,6 +158,17 @@ $pageTitle = e($book['title']) . ' - RepoBook';
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="<?= $isBookmarked ? 'currentColor' : 'none' ?>" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                                         <span class="bm-text"><?= $isBookmarked ? 'Tersimpan' : 'Simpan' ?></span>
                                     </button>
+                                <?php endif; ?>
+
+                                <?php if (isLoggedIn() && ($book['uploaded_by'] == $_SESSION['user_id'] || isAdmin())): ?>
+                                    <form action="<?= BASE_URL ?>/delete.php" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ebook ini secara permanen? Tindakan ini juga akan menghapus file fisik ebook.');" style="display: inline-block;">
+                                        <input type="hidden" name="id" value="<?= $book['id'] ?>">
+                                        <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
+                                        <button type="submit" class="btn-delete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                            Hapus Ebook
+                                        </button>
+                                    </form>
                                 <?php endif; ?>
                             </div>
 

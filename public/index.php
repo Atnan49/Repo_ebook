@@ -31,18 +31,28 @@ $viewMode   = $_GET['view'] ?? '';
 $isPopular  = isset($_GET['popular']);
 $isLatest   = isset($_GET['latest']);
 $isSaved    = isset($_GET['saved']);
+$isMyUploads = isset($_GET['my_uploads']);
 
 // Set page title based on view
 if ($isPopular) { $pageTitle = 'Populer - RepoBook'; }
 elseif ($isLatest) { $pageTitle = 'Terbaru - RepoBook'; }
 elseif ($isSaved)  { $pageTitle = 'Tersimpan - RepoBook'; }
+elseif ($isMyUploads) { $pageTitle = 'Upload Saya - RepoBook'; }
 elseif ($viewMode === 'categories') { $pageTitle = 'Kategori - RepoBook'; }
 elseif ($categoryId > 0) { $pageTitle = 'Kategori - RepoBook'; }
 
 try {
-    $where  = ["e.status = 'approved'"];
+    $where  = [];
     $params = [];
     $orderBy = "e.created_at DESC"; // default
+
+    if ($isMyUploads) {
+        requireLogin();
+        $where[] = "e.uploaded_by = :uid";
+        $params[':uid'] = $_SESSION['user_id'];
+    } else {
+        $where[] = "e.status = 'approved'";
+    }
 
     if ($search !== '') {
         $where[]  = "(e.title LIKE :q OR e.author LIKE :q)";
@@ -170,7 +180,7 @@ try {
                 </div>
 
                 <!-- Hero Section - Popular Bestsellers (only on home) -->
-                <?php if (empty($search) && $categoryId === 0 && !$isPopular && !$isLatest && !$isSaved && $viewMode !== 'categories'): ?>
+                <?php if (empty($search) && $categoryId === 0 && !$isPopular && !$isLatest && !$isSaved && !$isMyUploads && $viewMode !== 'categories'): ?>
                 <section class="hero-section">
                     <div class="hero-text">
                         <h2>POPULAR<br>BESTSELLERS</h2>
@@ -230,12 +240,14 @@ try {
                             <h3>
                                 <?php if ($search): ?>
                                     Hasil Pencarian "<?= e($search) ?>"
+                                <?php elseif ($isMyUploads): ?>
+                                     Upload Saya
                                 <?php elseif ($isPopular): ?>
-                                    🔥 Ebook Paling Populer
+                                    Ebook Paling Populer
                                 <?php elseif ($isLatest): ?>
-                                    🕐 Baru Ditambahkan
+                                     Baru Ditambahkan
                                 <?php elseif ($isSaved): ?>
-                                    📌 Ebook Tersimpan
+                                     Ebook Tersimpan
                                 <?php elseif ($categoryId > 0): ?>
                                     <?php
                                         $catName = '';
@@ -260,6 +272,9 @@ try {
                                         <img src="<?= $book['cover_image'] ? ASSET_URL . '/assets/covers/' . e($book['cover_image']) : ASSET_URL . '/assets/img/default-cover.jpg' ?>" 
                                              alt="<?= e($book['title']) ?>"
                                              loading="lazy">
+                                        <?php if ($isMyUploads): ?>
+                                            <div class="status-badge <?= e($book['status']) ?>"><?= e(ucfirst($book['status'])) ?></div>
+                                        <?php endif; ?>
                                         <?php if (isLoggedIn()): ?>
                                         <button class="bookmark-btn <?= in_array($book['id'], array_column($savedBooks ?? [], 'ebook_id')) ? 'saved' : '' ?>" title="Simpan" data-id="<?= $book['id'] ?>">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
