@@ -1,15 +1,21 @@
 <?php
-// Konfigurasi Database — mendukung ENV dari Docker maupun default lokal
-define('DB_HOST',    getenv('DB_HOST')    ?: 'localhost');
+// ============================================================
+// Konfigurasi Database
+// Mendukung ENV dari Docker maupun default untuk InfinityFree
+// ============================================================
+// ⚠️ GANTI nilai default di bawah dengan credentials dari
+//    InfinityFree Control Panel → MySQL Databases
+// ============================================================
+define('DB_HOST',    getenv('DB_HOST')    ?: 'sql.infinityfree.com');   // Ganti dengan DB Host dari panel
 define('DB_PORT',    getenv('DB_PORT')    ?: '3306');
-define('DB_NAME',    getenv('DB_NAME')    ?: 'repo_ebook');
-define('DB_USER',    getenv('DB_USER')    ?: 'root');
-define('DB_PASS',    getenv('DB_PASS')    ?: '');
+define('DB_NAME',    getenv('DB_NAME')    ?: 'epiz_XXXXX_repo_ebook'); // Ganti dengan nama DB dari panel
+define('DB_USER',    getenv('DB_USER')    ?: 'epiz_XXXXX');            // Ganti dengan DB Username dari panel
+define('DB_PASS',    getenv('DB_PASS')    ?: 'PASSWORD_KAMU');         // Ganti dengan DB Password dari panel
 define('DB_CHARSET', 'utf8mb4');
 
-// Base URL & Path
-define('BASE_URL',   getenv('BASE_URL') !== false ? getenv('BASE_URL') : '/Projek/Repo_ebook/public');
-define('ASSET_URL',  getenv('ASSET_URL') !== false ? getenv('ASSET_URL') : '/Projek/Repo_ebook');
+// Base URL & Path — kosongkan untuk deployment root level
+define('BASE_URL',   getenv('BASE_URL') !== false ? getenv('BASE_URL') : '');
+define('ASSET_URL',  getenv('ASSET_URL') !== false ? getenv('ASSET_URL') : '');
 define('ROOT_PATH',  dirname(__DIR__));
 
 define('STORAGE_PATH', ROOT_PATH . '/storage');

@@ -1,0 +1,23 @@
+# ============================================================
+# RepoBook — Root .htaccess untuk InfinityFree
+# Redirect semua request ke folder public/
+# Kecuali: assets/, admin/, storage/
+# ============================================================
+
+RewriteEngine On
+
+# Jika request adalah file/folder yang ada di root, serve langsung
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Izinkan akses langsung ke folder assets, admin, storage
+RewriteRule ^assets/(.*)$ assets/$1 [L]
+RewriteRule ^admin/(.*)$ admin/$1 [L]
+RewriteRule ^storage/(.*)$ storage/$1 [L]
+
+# Redirect root (/) ke public/index.php
+RewriteRule ^$ public/index.php [L]
+
+# Semua request lain → forward ke public/
+RewriteRule ^(.*)$ public/$1 [L]
