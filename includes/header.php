@@ -32,7 +32,7 @@ $pageTitle = $pageTitle ?? 'Repositori Ebook';
                     type="text" 
                     name="q" 
                     class="search-input" 
-                    placeholder="Cari judul buku atau penulis..." 
+                    placeholder="Cari judul, penulis, atau sinopsis..." 
                     value="<?= e($_GET['q'] ?? '') ?>"
                     autocomplete="off"
                 >

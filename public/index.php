@@ -55,8 +55,11 @@ try {
     }
 
     if ($search !== '') {
-        $where[]  = "(e.title LIKE :q OR e.author LIKE :q)";
-        $params[':q'] = "%{$search}%";
+        $where[]  = "(MATCH(e.title, e.author, e.description) AGAINST(:q IN NATURAL LANGUAGE MODE) OR e.title LIKE :like_title OR e.author LIKE :like_author OR e.description LIKE :like_desc)";
+        $params[':q'] = $search;
+        $params[':like_title'] = "%{$search}%";
+        $params[':like_author'] = "%{$search}%";
+        $params[':like_desc'] = "%{$search}%";
     }
     if ($categoryId > 0) {
         $where[]  = "e.category_id = :cat";
