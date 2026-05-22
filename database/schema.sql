@@ -3,12 +3,6 @@
 -- MySQL Database
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS repo_ebook
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
-
-USE repo_ebook;
-
 -- ============================================================
 -- 1. TABEL USERS
 -- Menyimpan data pengguna (member & admin)

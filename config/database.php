@@ -6,11 +6,11 @@
 // ⚠️ GANTI nilai default di bawah dengan credentials dari
 //    InfinityFree Control Panel → MySQL Databases
 // ============================================================
-define('DB_HOST',    getenv('DB_HOST')    ?: 'sql.infinityfree.com');   // Ganti dengan DB Host dari panel
+define('DB_HOST',    getenv('DB_HOST')    ?: 'sql308.infinityfree.com');
 define('DB_PORT',    getenv('DB_PORT')    ?: '3306');
-define('DB_NAME',    getenv('DB_NAME')    ?: 'epiz_XXXXX_repo_ebook'); // Ganti dengan nama DB dari panel
-define('DB_USER',    getenv('DB_USER')    ?: 'epiz_XXXXX');            // Ganti dengan DB Username dari panel
-define('DB_PASS',    getenv('DB_PASS')    ?: 'PASSWORD_KAMU');         // Ganti dengan DB Password dari panel
+define('DB_NAME',    getenv('DB_NAME')    ?: 'if0_41988896_repo_ebook');
+define('DB_USER',    getenv('DB_USER')    ?: 'if0_41988896');
+define('DB_PASS',    getenv('DB_PASS')    ?: 'Atnan231');
 define('DB_CHARSET', 'utf8mb4');
 
 // Base URL & Path — kosongkan untuk deployment root level
