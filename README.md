@@ -3,7 +3,7 @@
 RepoBook adalah aplikasi web repositori buku digital (ebook) interaktif yang memungkinkan pengguna untuk membaca, mencari, menyimpan, dan mengunggah koleksi buku dalam format PDF. Sistem ini dilengkapi dengan manajemen persetujuan (moderasi) oleh admin untuk memastikan kualitas konten.
 
 <p align="center">
-  <img src="assets/img/dashboard.png" alt="Dashboard Public RepoBook" width="100%">
+  <img src="assets/img/homepage_preview.png" alt="Dashboard Public RepoBook" width="100%">
 </p>
 
 ## Fitur Utama ✨
