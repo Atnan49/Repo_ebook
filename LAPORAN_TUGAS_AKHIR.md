@@ -1,5 +1,5 @@
 # LAPORAN TUGAS AKHIR
-## Praktikum Pemrograman Web - Kelas A
+## Praktikum Pemrograman Web - Kelas B
 
 <br>
 
