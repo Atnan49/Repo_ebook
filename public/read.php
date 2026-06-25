@@ -99,12 +99,17 @@ try {
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            transition: cursor 0.3s;
+        }
+
+        body.hud-hidden {
+            cursor: none;
         }
 
         /* Top Bar */
         .top-bar {
             height: 60px;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
@@ -112,6 +117,13 @@ try {
             align-items: center;
             padding: 0 20px;
             z-index: 100;
+            transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s;
+        }
+
+        body.hud-hidden .top-bar {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
         }
 
         .book-title {
@@ -152,7 +164,7 @@ try {
             justify-content: center;
             align-items: center;
             position: relative;
-            perspective: 2000px;
+            perspective: 2500px;
             overflow: hidden;
             padding: 20px;
         }
@@ -200,8 +212,70 @@ try {
             height: 600px;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
             transform-origin: center center;
+        }
+
+        /* Visual paper thickness stack mimicking physical book pages depth */
+        .book-container::before, .book-container::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            width: 8px;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            z-index: -1;
+            transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        /* Left paper stack thickness */
+        .book-container::before {
+            left: -8px;
+            border-radius: 4px 0 0 4px;
+            box-shadow: -2px 5px 12px rgba(0,0,0,0.3), inset -2px 0 4px rgba(0,0,0,0.15);
+            transform: scaleX(var(--left-thickness-scale, 0.5));
+            transform-origin: right center;
+        }
+
+        /* Right paper stack thickness */
+        .book-container::after {
+            right: -8px;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 2px 5px 12px rgba(0,0,0,0.3), inset 2px 0 4px rgba(0,0,0,0.15);
+            transform: scaleX(var(--right-thickness-scale, 0.5));
+            transform-origin: left center;
+        }
+
+        /* Single Page Mobile Mode overrides */
+        .book-container.single-page-mode {
+            width: 450px; /* single page width */
+        }
+
+        .book-container.single-page-mode::before,
+        .book-container.single-page-mode::after {
+            display: none;
+        }
+
+        .book-container.single-page-mode .sheet {
+            width: 100%;
+            left: 0;
+            right: auto;
+        }
+
+        .book-container.single-page-mode .page-face.back {
+            display: none;
+        }
+
+        .book-container.single-page-mode .page-face.front {
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+
+        .book-container.single-page-mode .page-face.front::after {
+            left: 0;
+            background: linear-gradient(to right, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0) 100%);
         }
 
         /* Background Book Shadow / Thickness Depth */
@@ -211,25 +285,32 @@ try {
             height: 100%;
             top: 0;
             left: 0;
-            background: rgba(0, 0, 0, 0.35);
-            filter: blur(25px);
+            background: rgba(0, 0, 0, 0.4);
+            filter: blur(30px);
             border-radius: 12px;
-            transform: translate3d(0, 15px, -50px);
+            transform: translate3d(0, 20px, -60px);
             pointer-events: none;
         }
 
-        /* Spine Fold (Center crease) */
+        /* Spine Fold (Center crease shadow ganda) */
         .book-spine-line {
             position: absolute;
-            width: 2px;
+            width: 12px;
             height: 100%;
             left: 50%;
             top: 0;
-            background: rgba(0, 0, 0, 0.25);
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
-            z-index: 40;
+            transform: translateX(-50%) translateZ(2px);
+            background: linear-gradient(to right, 
+                rgba(0, 0, 0, 0) 0%, 
+                rgba(0, 0, 0, 0.15) 20%, 
+                rgba(0, 0, 0, 0.4) 45%, 
+                rgba(0, 0, 0, 0.55) 50%, 
+                rgba(0, 0, 0, 0.4) 55%, 
+                rgba(0, 0, 0, 0.15) 80%, 
+                rgba(0, 0, 0, 0) 100%
+            );
+            z-index: 45;
             pointer-events: none;
-            transform: translateZ(1px);
         }
 
         /* Sheets (Pair of Pages) */
@@ -241,7 +322,7 @@ try {
             right: 0;
             transform-origin: left center;
             transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
             z-index: 1;
             pointer-events: none;
         }
@@ -255,49 +336,49 @@ try {
             transform: rotateY(-180deg);
         }
 
-        /* Dynamic Paper Flex/Curl Animations */
+        /* Google Play Books 3D Page Turn Keyframes with realistic paper bending/lifting */
         @keyframes flip-forward {
             0% {
-                transform: rotateY(0deg) skewY(0deg) scale(1);
+                transform: rotateY(0deg) translateZ(0px) skewY(0deg) scaleX(1);
             }
-            30% {
-                transform: rotateY(-50deg) skewY(-2.5deg) scaleX(0.95) scaleY(1.02);
+            25% {
+                transform: rotateY(-45deg) translateZ(50px) skewY(-2deg) scaleX(0.96);
             }
             50% {
-                transform: rotateY(-90deg) skewY(-4deg) scaleX(0.9) scaleY(1.04);
+                transform: rotateY(-90deg) translateZ(90px) skewY(-4deg) scaleX(0.91);
             }
-            70% {
-                transform: rotateY(-130deg) skewY(-2.5deg) scaleX(0.95) scaleY(1.02);
+            75% {
+                transform: rotateY(-135deg) translateZ(50px) skewY(-2deg) scaleX(0.96);
             }
             100% {
-                transform: rotateY(-180deg) skewY(0deg) scale(1);
+                transform: rotateY(-180deg) translateZ(0px) skewY(0deg) scaleX(1);
             }
         }
 
         @keyframes flip-backward {
             0% {
-                transform: rotateY(-180deg) skewY(0deg) scale(1);
+                transform: rotateY(-180deg) translateZ(0px) skewY(0deg) scaleX(1);
             }
-            30% {
-                transform: rotateY(-130deg) skewY(2.5deg) scaleX(0.95) scaleY(1.02);
+            25% {
+                transform: rotateY(-135deg) translateZ(50px) skewY(2deg) scaleX(0.96);
             }
             50% {
-                transform: rotateY(-90deg) skewY(4deg) scaleX(0.9) scaleY(1.04);
+                transform: rotateY(-90deg) translateZ(90px) skewY(4deg) scaleX(0.91);
             }
-            70% {
-                transform: rotateY(-50deg) skewY(2.5deg) scaleX(0.95) scaleY(1.02);
+            75% {
+                transform: rotateY(-45deg) translateZ(50px) skewY(2deg) scaleX(0.96);
             }
             100% {
-                transform: rotateY(0deg) skewY(0deg) scale(1);
+                transform: rotateY(0deg) translateZ(0px) skewY(0deg) scaleX(1);
             }
         }
 
         .sheet.flipping-forward {
-            animation: flip-forward 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+            animation: flip-forward 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
         }
 
         .sheet.flipping-backward {
-            animation: flip-backward 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+            animation: flip-backward 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
         }
 
         /* Moving shadow overlays during page-flip */
@@ -352,7 +433,63 @@ try {
             animation: shadow-backward-back 0.8s ease-in-out forwards;
         }
 
-        /* Page faces */
+        /* Dynamic Paper Lighting/Highlight Overlays */
+        .page-gradient-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 18;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @keyframes gradient-forward-front {
+            0% { opacity: 0; background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%); }
+            30% { opacity: 0.35; background: linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(255,255,255,0.12) 50%, rgba(0,0,0,0.25) 100%); }
+            70% { opacity: 0.2; background: linear-gradient(to left, rgba(0,0,0,0.2) 0%, rgba(255,255,255,0.08) 50%, rgba(0,0,0,0.08) 100%); }
+            100% { opacity: 0; }
+        }
+
+        @keyframes gradient-forward-back {
+            0% { opacity: 0; }
+            30% { opacity: 0.2; background: linear-gradient(to right, rgba(0,0,0,0.2) 0%, rgba(255,255,255,0.08) 50%, rgba(0,0,0,0.08) 100%); }
+            70% { opacity: 0.35; background: linear-gradient(to left, rgba(0,0,0,0.15) 0%, rgba(255,255,255,0.12) 50%, rgba(0,0,0,0.25) 100%); }
+            100% { opacity: 0; }
+        }
+
+        @keyframes gradient-backward-front {
+            0% { opacity: 0; }
+            30% { opacity: 0.2; background: linear-gradient(to left, rgba(0,0,0,0.2) 0%, rgba(255,255,255,0.08) 50%, rgba(0,0,0,0.08) 100%); }
+            70% { opacity: 0.35; background: linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(255,255,255,0.12) 50%, rgba(0,0,0,0.25) 100%); }
+            100% { opacity: 0; }
+        }
+
+        @keyframes gradient-backward-back {
+            0% { opacity: 0; background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%); }
+            30% { opacity: 0.35; background: linear-gradient(to left, rgba(0,0,0,0.15) 0%, rgba(255,255,255,0.12) 50%, rgba(0,0,0,0.25) 100%); }
+            70% { opacity: 0.2; background: linear-gradient(to right, rgba(0,0,0,0.2) 0%, rgba(255,255,255,0.08) 50%, rgba(0,0,0,0.08) 100%); }
+            100% { opacity: 0; }
+        }
+
+        .sheet.flipping-forward .page-face.front .page-gradient-overlay {
+            animation: gradient-forward-front 0.8s ease-in-out forwards;
+        }
+
+        .sheet.flipping-forward .page-face.back .page-gradient-overlay {
+            animation: gradient-forward-back 0.8s ease-in-out forwards;
+        }
+
+        .sheet.flipping-backward .page-face.front .page-gradient-overlay {
+            animation: gradient-backward-front 0.8s ease-in-out forwards;
+        }
+
+        .sheet.flipping-backward .page-face.back .page-gradient-overlay {
+            animation: gradient-backward-back 0.8s ease-in-out forwards;
+        }
+
+        /* Page faces (Cream-colored Warm Paper Theme) */
         .page-face {
             position: absolute;
             width: 100%;
@@ -360,8 +497,8 @@ try {
             top: 0;
             left: 0;
             backface-visibility: hidden;
-            background-color: #fcfbf9;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+            background-color: #f5f2eb; /* Warm paper tone */
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.06), 0 2px 5px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -373,7 +510,7 @@ try {
             content: '';
             position: absolute;
             top: 0;
-            width: 40px;
+            width: 45px;
             height: 100%;
             z-index: 10;
             pointer-events: none;
@@ -383,7 +520,7 @@ try {
             transform: rotateY(0deg);
             z-index: 2;
             border-radius: 0 8px 8px 0;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.15), inset 3px 0 10px rgba(0,0,0,0.05);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.15), inset 3px 0 10px rgba(0,0,0,0.04);
         }
 
         .page-face.front::after {
@@ -395,7 +532,7 @@ try {
             transform: rotateY(180deg);
             z-index: 1;
             border-radius: 8px 0 0 8px;
-            box-shadow: -5px 5px 15px rgba(0,0,0,0.15), inset -3px 0 10px rgba(0,0,0,0.05);
+            box-shadow: -5px 5px 15px rgba(0,0,0,0.15), inset -3px 0 10px rgba(0,0,0,0.04);
         }
 
         .page-face.back::after {
@@ -510,6 +647,13 @@ try {
             gap: 20px;
             padding: 0 20px;
             z-index: 100;
+            transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s;
+        }
+
+        body.hud-hidden .controls-panel {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
         }
 
         .control-group {
@@ -543,6 +687,100 @@ try {
             cursor: not-allowed;
         }
 
+        /* Interactive Range Slider (Scrubber) */
+        .scrubber-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .page-scrubber {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .page-scrubber:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .page-scrubber::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .page-scrubber::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        .page-scrubber::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .page-scrubber::-moz-range-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        .scrubber-tooltip {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: #3b82f6;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: transform 0.15s, opacity 0.15s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 120;
+            white-space: nowrap;
+        }
+
+        .scrubber-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #3b82f6 transparent transparent transparent;
+        }
+
+        .scrubber-container:hover .scrubber-tooltip,
+        .scrubber-container:focus-within .scrubber-tooltip,
+        .scrubber-container.dragging .scrubber-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
         .page-indicator {
             font-size: 14px;
             font-weight: 500;
@@ -558,6 +796,15 @@ try {
         /* Fullscreen styles */
         body:fullscreen {
             background: #090d16;
+        }
+
+        @media (max-width: 768px) {
+            .scrubber-container {
+                max-width: 180px;
+            }
+            .top-bar .book-title {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -605,11 +852,20 @@ try {
     </main>
 
     <!-- Bottom Control Panel -->
-    <footer class="controls-panel">
+    <footer class="controls-panel" id="controlsPanel">
         <div class="control-group">
             <button class="btn-control" id="prevBtn" onclick="bookFlip.prev()" title="Halaman Sebelumnya">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
             </button>
+        </div>
+
+        <!-- Google Play Books Scrubber Range Bar -->
+        <div class="scrubber-container" id="scrubberContainer">
+            <input type="range" id="pageScrubber" min="1" max="1" value="1" class="page-scrubber" title="Geser untuk mencari halaman">
+            <div class="scrubber-tooltip" id="scrubberTooltip">Halaman 1</div>
+        </div>
+
+        <div class="control-group">
             <div class="page-indicator">
                 Halaman <strong id="currentPageIndicator">1</strong> dari <strong id="totalPagesIndicator">-</strong>
             </div>
@@ -648,14 +904,11 @@ try {
             constructor(containerEl, numPages) {
                 this.container = containerEl;
                 this.numPages = numPages;
-                
-                // Construct dynamic sheets.
-                // Page 1 is Cover (right side), left side is blank.
-                // Page 2 & 3: Sheet 1 (Back = Page 2, Front = Page 3)
-                // Page 4 & 5: Sheet 2 (Back = Page 4, Front = Page 5)
-                // If odd number of pages, pad with a blank page at the end.
                 this.sheets = [];
                 this.currentSheetIndex = 0; // index of sheet currently in focus
+
+                // Detect single page mode (mobile screen)
+                this.isSinglePage = window.innerWidth <= 768;
 
                 this.initLayout();
                 this.updateZIndices();
@@ -668,22 +921,41 @@ try {
                 this.container.innerHTML = '';
                 shadows.forEach(el => this.container.appendChild(el));
 
-                // Sheet 0 (Cover Sheet)
-                // Left page: Blank, Right page: Page 1 (Cover)
-                this.createSheet(0, null, 1);
+                this.sheets = [];
 
-                // Sheets 1 to M
-                let sheetIdx = 1;
-                for (let p = 2; p <= this.numPages; p += 2) {
-                    const leftPage = p;
-                    const rightPage = (p + 1 <= this.numPages) ? p + 1 : null;
-                    this.createSheet(sheetIdx, leftPage, rightPage);
-                    sheetIdx++;
+                if (this.isSinglePage) {
+                    // Single Page Mode: 1 page per sheet
+                    this.container.classList.add('single-page-mode');
+                    
+                    const spine = this.container.querySelector('.book-spine-line');
+                    if (spine) spine.style.display = 'none';
+
+                    for (let p = 1; p <= this.numPages; p++) {
+                        this.createSingleSheet(p - 1, p);
+                    }
+                } else {
+                    // Double Page Mode
+                    this.container.classList.remove('single-page-mode');
+                    
+                    const spine = this.container.querySelector('.book-spine-line');
+                    if (spine) spine.style.display = 'block';
+
+                    // Sheet 0 (Cover Sheet)
+                    this.createSheet(0, null, 1);
+
+                    // Sheets 1 to M
+                    let sheetIdx = 1;
+                    for (let p = 2; p <= this.numPages; p += 2) {
+                        const leftPage = p;
+                        const rightPage = (p + 1 <= this.numPages) ? p + 1 : null;
+                        this.createSheet(sheetIdx, leftPage, rightPage);
+                        sheetIdx++;
+                    }
                 }
 
-                // Add active state to sheet 0
+                // Add active state to current sheet
                 if (this.sheets.length > 0) {
-                    this.sheets[0].classList.add('active');
+                    this.sheets[this.currentSheetIndex].classList.add('active');
                 }
             }
 
@@ -705,6 +977,11 @@ try {
                     const shadow = document.createElement('div');
                     shadow.className = 'page-shadow';
                     backFace.appendChild(shadow);
+
+                    // Add lighting overlay
+                    const gradient = document.createElement('div');
+                    gradient.className = 'page-gradient-overlay';
+                    backFace.appendChild(gradient);
                 } else {
                     backFace.classList.add('blank-face');
                 }
@@ -722,6 +999,11 @@ try {
                     const shadow = document.createElement('div');
                     shadow.className = 'page-shadow';
                     frontFace.appendChild(shadow);
+
+                    // Add lighting overlay
+                    const gradient = document.createElement('div');
+                    gradient.className = 'page-gradient-overlay';
+                    frontFace.appendChild(gradient);
                 } else {
                     frontFace.classList.add('blank-face');
                 }
@@ -734,6 +1016,41 @@ try {
                 // Trigger lazy render for initially visible pages (Page 1)
                 if (index === 0) {
                     if (rightPageNum) this.lazyRenderPage(rightPageNum);
+                }
+            }
+
+            createSingleSheet(index, pageNum) {
+                const sheetEl = document.createElement('div');
+                sheetEl.className = 'sheet';
+                sheetEl.id = `sheet-${index}`;
+
+                // In single page mode, back face is hidden via CSS
+                const backFace = document.createElement('div');
+                backFace.className = 'page-face back blank-face';
+
+                const frontFace = document.createElement('div');
+                frontFace.className = 'page-face front';
+                frontFace.classList.add('loading-page');
+                const canvas = document.createElement('canvas');
+                canvas.id = `page-canvas-${pageNum}`;
+                frontFace.appendChild(canvas);
+
+                const shadow = document.createElement('div');
+                shadow.className = 'page-shadow';
+                frontFace.appendChild(shadow);
+
+                const gradient = document.createElement('div');
+                gradient.className = 'page-gradient-overlay';
+                frontFace.appendChild(gradient);
+
+                sheetEl.appendChild(backFace);
+                sheetEl.appendChild(frontFace);
+                this.container.appendChild(sheetEl);
+                this.sheets.push(sheetEl);
+
+                // Trigger lazy render for initially visible page
+                if (index === 0) {
+                    this.lazyRenderPage(pageNum);
                 }
             }
 
@@ -776,27 +1093,26 @@ try {
                 });
             }
 
-            // Lazy loads pages in the vicinity of the active sheet
             preloadVicinity() {
-                // Determine pages visible for the current sheet index
-                // Sheet index 'i' displays:
-                // - Left side (from Sheet i-1 back if flipped, i.e., Page 2i)
-                // - Right side (from Sheet i front, i.e., Page 2i + 1)
-                
-                // Let's render current visible spread
-                const currentRightPage = 2 * this.currentSheetIndex + 1;
-                const currentLeftPage = currentRightPage - 1;
+                if (this.isSinglePage) {
+                    const current = this.currentSheetIndex + 1; // page number (1-based)
+                    this.lazyRenderPage(current);
+                    this.lazyRenderPage(current + 1);
+                    this.lazyRenderPage(current + 2);
+                    this.lazyRenderPage(current - 1);
+                    this.lazyRenderPage(current - 2);
+                } else {
+                    const currentRightPage = 2 * this.currentSheetIndex + 1;
+                    const currentLeftPage = currentRightPage - 1;
 
-                this.lazyRenderPage(currentLeftPage);
-                this.lazyRenderPage(currentRightPage);
+                    this.lazyRenderPage(currentLeftPage);
+                    this.lazyRenderPage(currentRightPage);
 
-                // Preload next spread
-                this.lazyRenderPage(currentRightPage + 1);
-                this.lazyRenderPage(currentRightPage + 2);
-
-                // Preload previous spread
-                this.lazyRenderPage(currentLeftPage - 1);
-                this.lazyRenderPage(currentLeftPage - 2);
+                    this.lazyRenderPage(currentRightPage + 1);
+                    this.lazyRenderPage(currentRightPage + 2);
+                    this.lazyRenderPage(currentLeftPage - 1);
+                    this.lazyRenderPage(currentLeftPage - 2);
+                }
             }
 
             updateZIndices() {
@@ -838,7 +1154,7 @@ try {
 
                 this.currentSheetIndex++;
                 this.preloadVicinity();
-                updateBookTransform(); // Slide book to center/sides immediately
+                updateBookTransform(); // Slide book immediately
 
                 setTimeout(() => {
                     sheet.classList.remove('flipping-forward');
@@ -866,7 +1182,7 @@ try {
                 }
 
                 this.preloadVicinity();
-                updateBookTransform(); // Slide book to center/sides immediately
+                updateBookTransform(); // Slide book immediately
 
                 setTimeout(() => {
                     sheet.classList.remove('flipping-backward');
@@ -879,31 +1195,115 @@ try {
             }
 
             updateButtons() {
-                const currentRightPage = 2 * this.currentSheetIndex + 1;
-                const currentLeftPage = currentRightPage - 1;
-                
-                // Indicators
                 const prevBtn = document.getElementById('prevBtn');
                 const nextBtn = document.getElementById('nextBtn');
                 const curIndicator = document.getElementById('currentPageIndicator');
+                const scrubber = document.getElementById('pageScrubber');
+                const tooltip = document.getElementById('scrubberTooltip');
 
                 prevBtn.disabled = (this.currentSheetIndex === 0);
                 nextBtn.disabled = (this.currentSheetIndex === this.sheets.length - 1);
 
-                // Set page text (e.g. "1" or "2-3")
-                if (this.currentSheetIndex === 0) {
-                    curIndicator.textContent = "1";
+                let activePage = 1;
+                if (this.isSinglePage) {
+                    activePage = this.currentSheetIndex + 1;
+                    curIndicator.textContent = `${activePage}`;
                 } else {
-                    const lastPageVal = Math.min(currentRightPage, this.numPages);
-                    curIndicator.textContent = `${currentLeftPage}-${lastPageVal}`;
+                    const currentRightPage = 2 * this.currentSheetIndex + 1;
+                    const currentLeftPage = currentRightPage - 1;
+
+                    if (this.currentSheetIndex === 0) {
+                        activePage = 1;
+                        curIndicator.textContent = "1";
+                    } else {
+                        const lastPageVal = Math.min(currentRightPage, this.numPages);
+                        activePage = currentLeftPage;
+                        curIndicator.textContent = `${currentLeftPage}-${lastPageVal}`;
+                    }
+                }
+
+                // Update Scrubber range slider value and tooltip
+                if (scrubber) {
+                    scrubber.value = activePage;
+                    if (tooltip) {
+                        tooltip.textContent = `Halaman ${activePage}`;
+                        const pct = (activePage - scrubber.min) / (scrubber.max - scrubber.min || 1);
+                        tooltip.style.left = `calc(${pct * 100}% - ${(pct - 0.5) * 16}px)`;
+                    }
+                }
+
+                // Update physical page thickness stack dynamically based on progress
+                const total = this.sheets.length;
+                const leftScale = total > 1 ? (this.currentSheetIndex / (total - 1)) : 0.5;
+                const rightScale = total > 1 ? (1 - (this.currentSheetIndex / (total - 1))) : 0.5;
+                this.container.style.setProperty('--left-thickness-scale', leftScale);
+                this.container.style.setProperty('--right-thickness-scale', rightScale);
+            }
+
+            checkResponsiveMode() {
+                const currentlySingle = window.innerWidth <= 768;
+                if (currentlySingle !== this.isSinglePage) {
+                    this.isSinglePage = currentlySingle;
+                    const activePage = this.getActivePageNumber();
+                    this.initLayout();
+                    this.jumpToPage(activePage);
                 }
             }
+
+            getActivePageNumber() {
+                if (this.isSinglePage) {
+                    return this.currentSheetIndex + 1;
+                } else {
+                    if (this.currentSheetIndex === 0) return 1;
+                    return 2 * this.currentSheetIndex; // return left page of spread
+                }
+            }
+
+            jumpToPage(pageNum) {
+                if (this.isSinglePage) {
+                    this.currentSheetIndex = Math.min(Math.max(0, pageNum - 1), this.numPages - 1);
+                } else {
+                    if (pageNum === 1) {
+                        this.currentSheetIndex = 0;
+                    } else {
+                        this.currentSheetIndex = Math.min(Math.floor(pageNum / 2), this.sheets.length - 1);
+                    }
+                }
+                this.preloadVicinity();
+                this.updateZIndices();
+                this.updateButtons();
+                updateBookTransform();
+            }
+        }
+
+        // HUD (Heads-Up Display) Auto-hide distraction-free mode
+        let hudTimeout;
+        function showHUD() {
+            document.body.classList.remove('hud-hidden');
+            clearTimeout(hudTimeout);
+            
+            // Only schedule hide if not dragging range slider and spinner overlay is not present
+            const isDragging = document.getElementById('scrubberContainer').classList.contains('dragging');
+            const isOverlayPresent = document.getElementById('loadingOverlay');
+            
+            if (!isDragging && !isOverlayPresent) {
+                hudTimeout = setTimeout(hideHUD, 3000);
+            }
+        }
+
+        function hideHUD() {
+            const isDragging = document.getElementById('scrubberContainer').classList.contains('dragging');
+            if (isDragging) return;
+            document.body.classList.add('hud-hidden');
         }
 
         // Initialize PDF Document
         function initPdfReader() {
             const overlay = document.getElementById('loadingOverlay');
             const progress = document.getElementById('loadingProgress');
+            const scrubber = document.getElementById('pageScrubber');
+            const tooltip = document.getElementById('scrubberTooltip');
+            const scrubberContainer = document.getElementById('scrubberContainer');
 
             progress.textContent = "Mengunduh file PDF...";
 
@@ -912,17 +1312,69 @@ try {
                 totalPages = pdf.numPages;
                 
                 document.getElementById('totalPagesIndicator').textContent = totalPages;
+                
+                // Initialize range scrubber values
+                if (scrubber) {
+                    scrubber.max = totalPages;
+                    scrubber.min = 1;
+                    scrubber.value = 1;
+                }
+
                 overlay.style.opacity = '0';
-                setTimeout(() => overlay.remove(), 500);
+                setTimeout(() => {
+                    overlay.remove();
+                    // Schedule first HUD timeout after load is complete
+                    showHUD();
+                }, 500);
 
                 // Build Book flip layout
                 bookFlip = new Book3D(document.getElementById('book'), totalPages);
                 
                 // Scale container to fit screen size
                 adjustBookScale();
+
+                // Setup Scrubber event handlers
+                if (scrubber && tooltip && scrubberContainer) {
+                    scrubber.addEventListener('input', () => {
+                        scrubberContainer.classList.add('dragging');
+                        const val = parseInt(scrubber.value);
+                        tooltip.textContent = `Halaman ${val}`;
+                        
+                        // Centered offset calculation
+                        const pct = (scrubber.value - scrubber.min) / (scrubber.max - scrubber.min || 1);
+                        tooltip.style.left = `calc(${pct * 100}% - ${(pct - 0.5) * 16}px)`;
+                        
+                        showHUD(); // Keep HUD open while scrubbing
+                    });
+
+                    scrubber.addEventListener('change', () => {
+                        scrubberContainer.classList.remove('dragging');
+                        if (bookFlip) {
+                            bookFlip.jumpToPage(parseInt(scrubber.value));
+                        }
+                        showHUD();
+                    });
+                }
+
             }).catch(err => {
                 console.error("Gagal membuka dokumen PDF:", err);
                 progress.innerHTML = '<span style="color:#ef4444;font-weight:600;">Gagal memuat dokumen. Pastikan file PDF valid.</span>';
+            });
+
+            // Set up HUD Event Listeners on Viewport
+            const viewport = document.getElementById('viewport');
+            viewport.addEventListener('mousemove', showHUD);
+            viewport.addEventListener('click', (e) => {
+                // Ignore click toggle if click was on navigators, top bar, or bottom control panels
+                if (e.target.closest('.click-zone') || e.target.closest('.controls-panel') || e.target.closest('.top-bar')) {
+                    return;
+                }
+                
+                if (document.body.classList.contains('hud-hidden')) {
+                    showHUD();
+                } else {
+                    hideHUD();
+                }
             });
         }
 
@@ -935,7 +1387,8 @@ try {
             const vw = viewport.clientWidth - padding;
             const vh = viewport.clientHeight - padding;
             
-            const naturalWidth = 900; // double page width
+            const isSingle = window.innerWidth <= 768;
+            const naturalWidth = isSingle ? 450 : 900;
             const naturalHeight = 600; // page height
             
             let scale = Math.min(vw / naturalWidth, vh / naturalHeight);
@@ -949,14 +1402,14 @@ try {
             const book = document.getElementById('book');
             if (!book) return;
             
-            let tx = '-25%'; // Default to centered cover
-            if (bookFlip) {
+            let tx = '0%'; // Default to centered (single page)
+            if (bookFlip && !bookFlip.isSinglePage) {
                 if (bookFlip.currentSheetIndex === 0) {
-                    tx = '-25%';
+                    tx = '-25%'; // Center cover
                 } else if (bookFlip.currentSheetIndex === bookFlip.sheets.length - 1) {
-                    tx = '25%';
+                    tx = '25%'; // Center back cover
                 } else {
-                    tx = '0%';
+                    tx = '0%'; // Center open book
                 }
             }
             
@@ -969,11 +1422,13 @@ try {
             // Limit scale between 0.3x and 2.5x
             currentScale = Math.max(0.3, Math.min(2.5, currentScale));
             updateBookTransform();
+            showHUD(); // Keep HUD open during active zoom clicks
         }
 
         // Navigation keyboard arrows
         document.addEventListener('keydown', (e) => {
             if (!bookFlip) return;
+            showHUD(); // Reset timeout on key activities
             if (e.key === 'ArrowRight' || e.key === ' ') {
                 bookFlip.next();
             } else if (e.key === 'ArrowLeft') {
@@ -983,6 +1438,7 @@ try {
 
         // Fullscreen Mode Handler
         function toggleFullscreen() {
+            showHUD();
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
                     console.error(`Gagal masuk mode layar penuh: ${err.message}`);
@@ -996,7 +1452,12 @@ try {
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(adjustBookScale, 100);
+            resizeTimer = setTimeout(() => {
+                adjustBookScale();
+                if (bookFlip) {
+                    bookFlip.checkResponsiveMode();
+                }
+            }, 100);
         });
 
         function closeReader() {
