@@ -69,7 +69,34 @@ $pageTitle = e($book['title']) . ' - RepoBook';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Dynamic SEO Meta Tags -->
     <title><?= $pageTitle ?></title>
+    <?php 
+    $bookDesc = $book['description'] ? substr(strip_tags($book['description']), 0, 160) : "Baca ebook " . $book['title'] . " oleh " . $book['author'] . " secara online gratis di RepoBook.";
+    $bookCoverUrl = $book['cover_image'] ? StorageHelper::getUrl($book['cover_image'], 'covers') : ASSET_URL . '/assets/img/default-cover.jpg';
+    $bookUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    ?>
+    <meta name="description" content="<?= htmlspecialchars($bookDesc) ?>">
+    <meta name="keywords" content="<?= htmlspecialchars($book['title']) ?>, <?= htmlspecialchars($book['author']) ?>, read online, download pdf, RepoBook">
+    <meta name="author" content="<?= htmlspecialchars($book['author']) ?>">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="book">
+    <meta property="og:url" content="<?= $bookUrl ?>">
+    <meta property="og:title" content="<?= $pageTitle ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($bookDesc) ?>">
+    <meta property="og:image" content="<?= $bookCoverUrl ?>">
+    <meta property="og:site_name" content="RepoBook">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="<?= $bookUrl ?>">
+    <meta property="twitter:title" content="<?= $pageTitle ?>">
+    <meta property="twitter:description" content="<?= htmlspecialchars($bookDesc) ?>">
+    <meta property="twitter:image" content="<?= $bookCoverUrl ?>">
+
     <link rel="icon" type="image/x-icon" href="<?= ASSET_URL ?>/favicon.ico">
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/style.css">
     <style>

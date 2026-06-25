@@ -12,6 +12,13 @@ $uri = rtrim($uri, '/');
 // Route mapping to original monolithic files
 if ($uri === '' || $uri === '/index.php') {
     require __DIR__ . '/../public/index.php';
+} elseif ($uri === '/robots.txt') {
+    header('Content-Type: text/plain; charset=utf-8');
+    require __DIR__ . '/../public/robots.txt';
+    exit;
+} elseif ($uri === '/sitemap.xml') {
+    require __DIR__ . '/../public/sitemap.php';
+    exit;
 } elseif ($uri === '/read.php') {
     require __DIR__ . '/../public/read.php';
 } elseif ($uri === '/upload.php') {

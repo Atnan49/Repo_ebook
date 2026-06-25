@@ -1,0 +1,14 @@
+# robots.txt untuk RepoBook
+# Mengontrol perayapan oleh mesin pencari seperti Googlebot, Bingbot, dll.
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login.php
+Disallow: /register.php
+Disallow: /delete.php
+Disallow: /bookmark.php
+
+# Sitemap XML Dinamis
+Sitemap: https://repo-ebook.vercel.app/sitemap.xml

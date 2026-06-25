@@ -141,8 +141,33 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="RepoBook - Repositori Ebook Digital. Baca dan bagikan ribuan ebook gratis secara online.">
+    
+    <!-- SEO Meta Tags -->
     <title><?= e($pageTitle) ?></title>
+    <meta name="description" content="RepoBook - Repositori Ebook Digital Terlengkap. Temukan, baca, dan bagikan ribuan ebook berkualitas secara gratis dari berbagai kategori seperti Teknologi, Bisnis, Pendidikan, Sejarah, dan lainnya.">
+    <meta name="keywords" content="repositori ebook, download pdf gratis, baca buku online, perpustakaan digital, ebook gratis, ebook indonesia, RepoBook">
+    <meta name="author" content="RepoBook">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Google Search Console Verification -->
+    <?php if (getenv('GOOGLE_SITE_VERIFICATION')): ?>
+    <meta name="google-site-verification" content="<?= htmlspecialchars(getenv('GOOGLE_SITE_VERIFICATION')) ?>" />
+    <?php endif; ?>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] ?>">
+    <meta property="og:title" content="<?= e($pageTitle) ?>">
+    <meta property="og:description" content="Temukan dan bagikan ribuan buku/ebook digital gratis di RepoBook. Platform repositori ebook stateless modern.">
+    <meta property="og:image" content="<?= ASSET_URL ?>/assets/img/homepage_preview.png">
+    <meta property="og:site_name" content="RepoBook">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="<?= (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] ?>">
+    <meta property="twitter:title" content="<?= e($pageTitle) ?>">
+    <meta property="twitter:description" content="Temukan dan bagikan ribuan buku/ebook digital gratis di RepoBook. Platform repositori ebook stateless modern.">
+    <meta property="twitter:image" content="<?= ASSET_URL ?>/assets/img/homepage_preview.png">
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?= ASSET_URL ?>/favicon.ico">

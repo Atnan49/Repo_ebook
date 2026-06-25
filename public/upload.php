@@ -174,6 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title><?= e($pageTitle) ?></title>
     <link rel="icon" type="image/x-icon" href="<?= ASSET_URL ?>/favicon.ico">
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/style.css">
