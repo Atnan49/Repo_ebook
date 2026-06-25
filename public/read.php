@@ -336,49 +336,84 @@ try {
             transform: rotateY(-180deg);
         }
 
-        /* Google Play Books 3D Page Turn Keyframes with realistic paper bending/lifting */
+        /* Google Play Books 3D Page Turn Keyframes with realistic paper bending/lifting and Z-tilt */
         @keyframes flip-forward {
             0% {
-                transform: rotateY(0deg) translateZ(0px) skewY(0deg) scaleX(1);
+                transform: rotateY(0deg) translateZ(0px) skewY(0deg) rotateZ(0deg) scale(1);
             }
-            25% {
-                transform: rotateY(-45deg) translateZ(50px) skewY(-2deg) scaleX(0.96);
+            30% {
+                transform: rotateY(-60deg) translateZ(100px) skewY(-5deg) rotateZ(-4deg) scale(0.96);
             }
-            50% {
-                transform: rotateY(-90deg) translateZ(90px) skewY(-4deg) scaleX(0.91);
-            }
-            75% {
-                transform: rotateY(-135deg) translateZ(50px) skewY(-2deg) scaleX(0.96);
+            60% {
+                transform: rotateY(-120deg) translateZ(100px) skewY(-3deg) rotateZ(-3deg) scale(0.96);
             }
             100% {
-                transform: rotateY(-180deg) translateZ(0px) skewY(0deg) scaleX(1);
+                transform: rotateY(-180deg) translateZ(0px) skewY(0deg) rotateZ(0deg) scale(1);
             }
         }
 
         @keyframes flip-backward {
             0% {
-                transform: rotateY(-180deg) translateZ(0px) skewY(0deg) scaleX(1);
+                transform: rotateY(-180deg) translateZ(0px) skewY(0deg) rotateZ(0deg) scale(1);
             }
-            25% {
-                transform: rotateY(-135deg) translateZ(50px) skewY(2deg) scaleX(0.96);
+            30% {
+                transform: rotateY(-120deg) translateZ(100px) skewY(5deg) rotateZ(4deg) scale(0.96);
             }
-            50% {
-                transform: rotateY(-90deg) translateZ(90px) skewY(4deg) scaleX(0.91);
-            }
-            75% {
-                transform: rotateY(-45deg) translateZ(50px) skewY(2deg) scaleX(0.96);
+            60% {
+                transform: rotateY(-60deg) translateZ(100px) skewY(3deg) rotateZ(3deg) scale(0.96);
             }
             100% {
-                transform: rotateY(0deg) translateZ(0px) skewY(0deg) scaleX(1);
+                transform: rotateY(0deg) translateZ(0px) skewY(0deg) rotateZ(0deg) scale(1);
             }
         }
 
         .sheet.flipping-forward {
-            animation: flip-forward 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+            animation: flip-forward 0.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
         }
 
         .sheet.flipping-backward {
-            animation: flip-backward 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+            animation: flip-backward 0.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+        }
+
+        /* Cast shadows on underlying sheets during transition */
+        @keyframes cast-shadow-right-uncover {
+            0% { opacity: 0.75; background: linear-gradient(to right, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0) 65%); }
+            40% { opacity: 0.45; background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 30%, rgba(0,0,0,0) 80%); }
+            100% { opacity: 0; }
+        }
+
+        @keyframes cast-shadow-left-cover {
+            0% { opacity: 0; }
+            40% { opacity: 0.35; background: linear-gradient(to left, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0) 100%); }
+            100% { opacity: 0.75; background: linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 25%, rgba(0,0,0,0) 70%); }
+        }
+
+        @keyframes cast-shadow-left-uncover {
+            0% { opacity: 0.75; background: linear-gradient(to left, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0) 65%); }
+            40% { opacity: 0.45; background: linear-gradient(to left, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.15) 30%, rgba(0,0,0,0) 80%); }
+            100% { opacity: 0; }
+        }
+
+        @keyframes cast-shadow-right-cover {
+            0% { opacity: 0; }
+            40% { opacity: 0.35; background: linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0) 100%); }
+            100% { opacity: 0.75; background: linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 25%, rgba(0,0,0,0) 70%); }
+        }
+
+        .cast-shadow-forward-right .page-face.front .page-shadow {
+            animation: cast-shadow-right-uncover 0.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+        }
+
+        .cast-shadow-forward-left .page-face.back .page-shadow {
+            animation: cast-shadow-left-cover 0.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+        }
+
+        .cast-shadow-backward-left .page-face.back .page-shadow {
+            animation: cast-shadow-left-uncover 0.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+        }
+
+        .cast-shadow-backward-right .page-face.front .page-shadow {
+            animation: cast-shadow-right-cover 0.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
         }
 
         /* Moving shadow overlays during page-flip */
@@ -1146,10 +1181,15 @@ try {
                 sheet.classList.add('flipping-forward');
                 sheet.style.zIndex = this.sheets.length + 10; // Elevate Z-index in mid-air
 
-                // Cast shadow on the sheet underneath on the right
+                // Cast shadow on the sheet underneath on the right (being uncovered)
                 const nextSheet = this.sheets[this.currentSheetIndex + 1];
                 if (nextSheet) {
-                    nextSheet.classList.add('cast-shadow-forward');
+                    nextSheet.classList.add('cast-shadow-forward-right');
+                }
+                // Cast shadow on the sheet underneath on the left (being covered)
+                const prevCoveredSheet = this.sheets[this.currentSheetIndex - 1];
+                if (prevCoveredSheet) {
+                    prevCoveredSheet.classList.add('cast-shadow-forward-left');
                 }
 
                 this.currentSheetIndex++;
@@ -1159,7 +1199,10 @@ try {
                 setTimeout(() => {
                     sheet.classList.remove('flipping-forward');
                     if (nextSheet) {
-                        nextSheet.classList.remove('cast-shadow-forward');
+                        nextSheet.classList.remove('cast-shadow-forward-right');
+                    }
+                    if (prevCoveredSheet) {
+                        prevCoveredSheet.classList.remove('cast-shadow-forward-left');
                     }
                     this.updateZIndices();
                     this.updateButtons();
@@ -1175,10 +1218,15 @@ try {
                 sheet.classList.add('flipping-backward');
                 sheet.style.zIndex = this.sheets.length + 10; // Elevate Z-index in mid-air
 
-                // Cast shadow on the sheet underneath on the left
+                // Cast shadow on the sheet underneath on the left (being uncovered)
                 const prevSheet = this.sheets[this.currentSheetIndex - 1];
                 if (prevSheet) {
-                    prevSheet.classList.add('cast-shadow-backward');
+                    prevSheet.classList.add('cast-shadow-backward-left');
+                }
+                // Cast shadow on the sheet underneath on the right (being covered)
+                const nextCoveredSheet = this.sheets[this.currentSheetIndex + 1];
+                if (nextCoveredSheet) {
+                    nextCoveredSheet.classList.add('cast-shadow-backward-right');
                 }
 
                 this.preloadVicinity();
@@ -1187,7 +1235,10 @@ try {
                 setTimeout(() => {
                     sheet.classList.remove('flipping-backward');
                     if (prevSheet) {
-                        prevSheet.classList.remove('cast-shadow-backward');
+                        prevSheet.classList.remove('cast-shadow-backward-left');
+                    }
+                    if (nextCoveredSheet) {
+                        nextCoveredSheet.classList.remove('cast-shadow-backward-right');
                     }
                     this.updateZIndices();
                     this.updateButtons();
