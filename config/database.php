@@ -4,17 +4,45 @@
 // Mendukung ENV dari Docker maupun default untuk InfinityFree & Supabase
 // ============================================================
 
-define('DB_CONNECTION', getenv('DB_CONNECTION') ?: 'mysql');
-define('DB_HOST',    getenv('DB_HOST')    ?: 'sql308.infinityfree.com');
-define('DB_PORT',    getenv('DB_PORT')    ?: '3306');
-define('DB_NAME',    getenv('DB_NAME')    ?: 'if0_41988896_repo_ebook');
-define('DB_USER',    getenv('DB_USER')    ?: 'if0_41988896');
-define('DB_PASS',    getenv('DB_PASS')    ?: 'Atnan231');
+$dbConn = getenv('DB_CONNECTION');
+$dbHost = getenv('DB_HOST');
+$dbPort = getenv('DB_PORT');
+$dbName = getenv('DB_NAME');
+$dbUser = getenv('DB_USER');
+$dbPass = getenv('DB_PASS');
+
+if (getenv('POSTGRES_URL')) {
+    $parsedUrl = parse_url(getenv('POSTGRES_URL'));
+    if ($parsedUrl) {
+        $dbConn = 'pgsql';
+        $dbHost = $parsedUrl['host'] ?? $dbHost;
+        $dbPort = $parsedUrl['port'] ?? $dbPort;
+        $dbUser = $parsedUrl['user'] ?? $dbUser;
+        $dbPass = $parsedUrl['pass'] ?? $dbPass;
+        if (isset($parsedUrl['path'])) {
+            $dbName = ltrim($parsedUrl['path'], '/');
+        }
+    }
+} elseif (getenv('POSTGRES_HOST')) {
+    $dbConn = 'pgsql';
+    $dbHost = getenv('POSTGRES_HOST');
+    $dbPort = getenv('POSTGRES_PORT') ?: '5432';
+    $dbName = getenv('POSTGRES_DATABASE');
+    $dbUser = getenv('POSTGRES_USER');
+    $dbPass = getenv('POSTGRES_PASSWORD');
+}
+
+define('DB_CONNECTION', $dbConn ?: 'mysql');
+define('DB_HOST',       $dbHost ?: 'sql308.infinityfree.com');
+define('DB_PORT',       $dbPort ?: '3306');
+define('DB_NAME',       $dbName ?: 'if0_41988896_repo_ebook');
+define('DB_USER',       $dbUser ?: 'if0_41988896');
+define('DB_PASS',       $dbPass ?: 'Atnan231');
 define('DB_CHARSET', 'utf8mb4');
 
 // Supabase Configuration for Storage
-define('SUPABASE_URL', getenv('SUPABASE_URL') ?: '');
-define('SUPABASE_KEY', getenv('SUPABASE_KEY') ?: '');
+define('SUPABASE_URL', getenv('SUPABASE_URL') ?: getenv('NEXT_PUBLIC_SUPABASE_URL') ?: '');
+define('SUPABASE_KEY', getenv('SUPABASE_KEY') ?: getenv('SUPABASE_ANON_KEY') ?: getenv('SUPABASE_SERVICE_ROLE_KEY') ?: '');
 
 // Base URL & Path — kosongkan untuk deployment root level atau biarkan terdeteksi otomatis
 if (getenv('BASE_URL') !== false) {

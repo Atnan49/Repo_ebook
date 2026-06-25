@@ -18,4 +18,6 @@ desktop.ini
 *.swo
 
 # Environment
-.env
+.env*
+
+.vercel
