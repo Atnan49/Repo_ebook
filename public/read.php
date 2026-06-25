@@ -200,7 +200,7 @@ try {
             height: 600px;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.1s ease;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
             transform-origin: center center;
         }
 
@@ -830,11 +830,21 @@ try {
                 sheet.classList.add('flipping-forward');
                 sheet.style.zIndex = this.sheets.length + 10; // Elevate Z-index in mid-air
 
+                // Cast shadow on the sheet underneath on the right
+                const nextSheet = this.sheets[this.currentSheetIndex + 1];
+                if (nextSheet) {
+                    nextSheet.classList.add('cast-shadow-forward');
+                }
+
                 this.currentSheetIndex++;
                 this.preloadVicinity();
+                updateBookTransform(); // Slide book to center/sides immediately
 
                 setTimeout(() => {
                     sheet.classList.remove('flipping-forward');
+                    if (nextSheet) {
+                        nextSheet.classList.remove('cast-shadow-forward');
+                    }
                     this.updateZIndices();
                     this.updateButtons();
                 }, 800); // match transition speed (0.8s)
@@ -849,10 +859,20 @@ try {
                 sheet.classList.add('flipping-backward');
                 sheet.style.zIndex = this.sheets.length + 10; // Elevate Z-index in mid-air
 
+                // Cast shadow on the sheet underneath on the left
+                const prevSheet = this.sheets[this.currentSheetIndex - 1];
+                if (prevSheet) {
+                    prevSheet.classList.add('cast-shadow-backward');
+                }
+
                 this.preloadVicinity();
+                updateBookTransform(); // Slide book to center/sides immediately
 
                 setTimeout(() => {
                     sheet.classList.remove('flipping-backward');
+                    if (prevSheet) {
+                        prevSheet.classList.remove('cast-shadow-backward');
+                    }
                     this.updateZIndices();
                     this.updateButtons();
                 }, 800);
@@ -908,9 +928,8 @@ try {
 
         // Book scaling handler to fit viewport sizes nicely
         function adjustBookScale() {
-            const book = document.getElementById('book');
-            if (!book) return;
             const viewport = document.getElementById('viewport');
+            if (!viewport) return;
             
             const padding = 60;
             const vw = viewport.clientWidth - padding;
@@ -923,17 +942,33 @@ try {
             if (scale > 1.4) scale = 1.4; // cap upscale
             
             currentScale = scale;
-            book.style.transform = `scale(${currentScale})`;
+            updateBookTransform();
+        }
+
+        function updateBookTransform() {
+            const book = document.getElementById('book');
+            if (!book) return;
+            
+            let tx = '-25%'; // Default to centered cover
+            if (bookFlip) {
+                if (bookFlip.currentSheetIndex === 0) {
+                    tx = '-25%';
+                } else if (bookFlip.currentSheetIndex === bookFlip.sheets.length - 1) {
+                    tx = '25%';
+                } else {
+                    tx = '0%';
+                }
+            }
+            
+            book.style.transform = `scale(${currentScale}) translateX(${tx})`;
         }
 
         function zoomBook(factor) {
-            const book = document.getElementById('book');
-            if (!book) return;
             currentScale *= factor;
             
             // Limit scale between 0.3x and 2.5x
             currentScale = Math.max(0.3, Math.min(2.5, currentScale));
-            book.style.transform = `scale(${currentScale})`;
+            updateBookTransform();
         }
 
         // Navigation keyboard arrows
