@@ -9,6 +9,7 @@ if (isLoggedIn()) {
 
 $pageTitle = 'Daftar - RepoBook';
 $errors = [];
+$db = null;
 $old = ['name' => '', 'email' => ''];
 
 // Handle Form Submit
