@@ -7,6 +7,7 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/storage.php';
 
 requireLogin();
 
@@ -78,19 +79,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($errors)) {
             // Move PDF
             $pdfName = uniqid('ebook_') . '.pdf';
-            $pdfDest = PDF_STORAGE . '/' . $pdfName;
+            
+            $pdfUploaded = StorageHelper::upload($pdf['tmp_name'], $pdfName, 'pdfs');
 
-            if (!is_dir(PDF_STORAGE)) {
-                mkdir(PDF_STORAGE, 0755, true);
-            }
-
-            if (move_uploaded_file($pdf['tmp_name'], $pdfDest)) {
+            if ($pdfUploaded) {
                 // Move Cover
                 if ($coverName && !empty($_FILES['cover_image']['tmp_name'])) {
-                    if (!is_dir(COVER_STORAGE)) mkdir(COVER_STORAGE, 0755, true);
-
                     $coverTmpPath = $_FILES['cover_image']['tmp_name'];
-                    $coverDestPath = COVER_STORAGE . '/' . $coverName;
+                    
+                    // Temp destination dir
+                    $tempDestDir = StorageHelper::isSupabaseEnabled() ? sys_get_temp_dir() : COVER_STORAGE;
+                    if (!is_dir($tempDestDir)) {
+                        mkdir($tempDestDir, 0755, true);
+                    }
+                    $coverDestPath = $tempDestDir . '/' . $coverName;
 
                     // Auto convert to WebP if supported by GD
                     $image = false;
@@ -115,13 +117,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
-                    if (!$isConverted) {
-                        // Fallback if GD fails or WebP is not supported, move the original file as is
+                    if ($isConverted) {
+                        if (StorageHelper::isSupabaseEnabled()) {
+                            StorageHelper::upload($coverDestPath, $coverName, 'covers');
+                            @unlink($coverDestPath);
+                        }
+                    } else {
+                        // Fallback if GD fails or WebP is not supported
                         if (function_exists('imagewebp')) {
                             $coverName = pathinfo($coverName, PATHINFO_FILENAME) . '.' . $imgExt;
-                            $coverDestPath = COVER_STORAGE . '/' . $coverName;
+                            $coverDestPath = $tempDestDir . '/' . $coverName;
                         }
-                        move_uploaded_file($coverTmpPath, $coverDestPath);
+                        
+                        if (StorageHelper::isSupabaseEnabled()) {
+                            StorageHelper::upload($coverTmpPath, $coverName, 'covers');
+                        } else {
+                            move_uploaded_file($coverTmpPath, $coverDestPath);
+                        }
                     }
                 }
 

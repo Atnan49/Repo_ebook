@@ -6,6 +6,7 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/storage.php';
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     redirect(BASE_URL . '/index.php');
@@ -114,7 +115,7 @@ $pageTitle = e($book['title']) . ' - RepoBook';
 
                     <div class="detail-card">
                         <div class="detail-cover">
-                            <img src="<?= $book['cover_image'] ? ASSET_URL . '/assets/covers/' . e($book['cover_image']) : ASSET_URL . '/assets/img/default-cover.jpg' ?>" alt="<?= e($book['title']) ?>">
+                             <img src="<?= $book['cover_image'] ? StorageHelper::getUrl($book['cover_image'], 'covers') : ASSET_URL . '/assets/img/default-cover.jpg' ?>" alt="<?= e($book['title']) ?>">
                         </div>
                         <div class="detail-info">
                             <div>

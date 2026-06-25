@@ -9,6 +9,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/storage.php';
 
 // 1. Validasi Metode Request wajib POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -52,24 +53,14 @@ try {
         redirect(BASE_URL . '/detail.php?id=' . $id);
     }
 
-    // 7. Hapus file fisik PDF dari server
+    // 7. Hapus file PDF dari penyimpanan
     if (!empty($book['pdf_file'])) {
-        $pdfPath = PDF_STORAGE . '/' . $book['pdf_file'];
-        if (file_exists($pdfPath)) {
-            if (!unlink($pdfPath)) {
-                error_log("Gagal menghapus file PDF: " . $pdfPath);
-            }
-        }
+        StorageHelper::delete($book['pdf_file'], 'pdfs');
     }
 
-    // 8. Hapus file fisik Cover dari server
+    // 8. Hapus file Cover dari penyimpanan
     if (!empty($book['cover_image'])) {
-        $coverPath = COVER_STORAGE . '/' . $book['cover_image'];
-        if (file_exists($coverPath)) {
-            if (!unlink($coverPath)) {
-                error_log("Gagal menghapus file Cover: " . $coverPath);
-            }
-        }
+        StorageHelper::delete($book['cover_image'], 'covers');
     }
 
     // 9. Hapus data ebook dari database

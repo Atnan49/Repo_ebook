@@ -6,6 +6,7 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/storage.php';
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Akses ditolak: ID ebook tidak valid.");
@@ -44,9 +45,11 @@ try {
         }
     }
 
-    $filePath = PDF_STORAGE . '/' . $book['pdf_file'];
-    if (!file_exists($filePath)) {
-        die("File PDF tidak ditemukan di server.");
+    if (!StorageHelper::isSupabaseEnabled()) {
+        $filePath = PDF_STORAGE . '/' . $book['pdf_file'];
+        if (!file_exists($filePath)) {
+            die("File PDF tidak ditemukan di server.");
+        }
     }
 
     // Mode 1: PDF Binary Streaming (for PDF.js consumer)
@@ -57,12 +60,10 @@ try {
             $_SESSION['read_' . $id] = true;
         }
 
-        header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="' . str_replace('"', '', basename($book['title'])) . '.pdf"');
         header('Content-Transfer-Encoding: binary');
         header('Accept-Ranges: bytes');
-        header('Content-Length: ' . filesize($filePath));
-        @readfile($filePath);
+        StorageHelper::streamPdf($book['pdf_file']);
         exit;
     }
 
@@ -734,6 +735,7 @@ try {
 
         .page-scrubber {
             -webkit-appearance: none;
+            appearance: none;
             width: 100%;
             height: 6px;
             border-radius: 3px;

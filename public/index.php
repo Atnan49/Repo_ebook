@@ -7,12 +7,14 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/storage.php';
 
 $pageTitle = 'Home - RepoBook';
 
+$db = Database::connect();
+
 // ---- Fetch Categories ----
 try {
-    $db = Database::connect();
     $stmtCat = $db->query("SELECT * FROM categories ORDER BY name ASC");
     $categories = $stmtCat->fetchAll();
 } catch (PDOException $e) {
@@ -55,8 +57,7 @@ try {
     }
 
     if ($search !== '') {
-        $where[]  = "(MATCH(e.title, e.author, e.description) AGAINST(:q IN NATURAL LANGUAGE MODE) OR e.title LIKE :like_title OR e.author LIKE :like_author OR e.description LIKE :like_desc)";
-        $params[':q'] = $search;
+        $where[]  = "(LOWER(e.title) LIKE LOWER(:like_title) OR LOWER(e.author) LIKE LOWER(:like_author) OR LOWER(e.description) LIKE LOWER(:like_desc))";
         $params[':like_title'] = "%{$search}%";
         $params[':like_author'] = "%{$search}%";
         $params[':like_desc'] = "%{$search}%";
@@ -197,7 +198,7 @@ try {
                         <?php if (!empty($popularBooks)): ?>
                             <?php foreach ($popularBooks as $pop): ?>
                                 <a href="<?= BASE_URL ?>/detail.php?id=<?= $pop['id'] ?>" class="hero-book-card">
-                                    <img src="<?= $pop['cover_image'] ? ASSET_URL . '/assets/covers/' . e($pop['cover_image']) : ASSET_URL . '/assets/img/default-cover.jpg' ?>" 
+                                    <img src="<?= $pop['cover_image'] ? StorageHelper::getUrl($pop['cover_image'], 'covers') : ASSET_URL . '/assets/img/default-cover.jpg' ?>" 
                                          alt="<?= e($pop['title']) ?>">
                                 </a>
                             <?php endforeach; ?>
@@ -272,7 +273,7 @@ try {
                             <?php foreach ($books as $book): ?>
                                 <a href="<?= BASE_URL ?>/detail.php?id=<?= $book['id'] ?>" class="book-card" id="book-<?= $book['id'] ?>">
                                     <div class="book-cover">
-                                        <img src="<?= $book['cover_image'] ? ASSET_URL . '/assets/covers/' . e($book['cover_image']) : ASSET_URL . '/assets/img/default-cover.jpg' ?>" 
+                                        <img src="<?= $book['cover_image'] ? StorageHelper::getUrl($book['cover_image'], 'covers') : ASSET_URL . '/assets/img/default-cover.jpg' ?>" 
                                              alt="<?= e($book['title']) ?>"
                                              loading="lazy">
                                         <?php if ($isMyUploads): ?>
