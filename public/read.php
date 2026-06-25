@@ -246,13 +246,110 @@ try {
             pointer-events: none;
         }
 
-        .sheet.active, .sheet.flipping {
+        .sheet.active, .sheet.flipping-forward, .sheet.flipping-backward {
             pointer-events: auto;
         }
 
         /* Flipped state */
         .sheet.flipped {
             transform: rotateY(-180deg);
+        }
+
+        /* Dynamic Paper Flex/Curl Animations */
+        @keyframes flip-forward {
+            0% {
+                transform: rotateY(0deg) skewY(0deg) scale(1);
+            }
+            30% {
+                transform: rotateY(-50deg) skewY(-2.5deg) scaleX(0.95) scaleY(1.02);
+            }
+            50% {
+                transform: rotateY(-90deg) skewY(-4deg) scaleX(0.9) scaleY(1.04);
+            }
+            70% {
+                transform: rotateY(-130deg) skewY(-2.5deg) scaleX(0.95) scaleY(1.02);
+            }
+            100% {
+                transform: rotateY(-180deg) skewY(0deg) scale(1);
+            }
+        }
+
+        @keyframes flip-backward {
+            0% {
+                transform: rotateY(-180deg) skewY(0deg) scale(1);
+            }
+            30% {
+                transform: rotateY(-130deg) skewY(2.5deg) scaleX(0.95) scaleY(1.02);
+            }
+            50% {
+                transform: rotateY(-90deg) skewY(4deg) scaleX(0.9) scaleY(1.04);
+            }
+            70% {
+                transform: rotateY(-50deg) skewY(2.5deg) scaleX(0.95) scaleY(1.02);
+            }
+            100% {
+                transform: rotateY(0deg) skewY(0deg) scale(1);
+            }
+        }
+
+        .sheet.flipping-forward {
+            animation: flip-forward 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+        }
+
+        .sheet.flipping-backward {
+            animation: flip-backward 0.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+        }
+
+        /* Moving shadow overlays during page-flip */
+        .page-shadow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @keyframes shadow-forward-front {
+            0% { opacity: 0; background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%); }
+            50% { opacity: 0.6; background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%); }
+            100% { opacity: 0; background: linear-gradient(to right, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%); }
+        }
+
+        @keyframes shadow-forward-back {
+            0% { opacity: 0.6; background: linear-gradient(to left, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%); }
+            50% { opacity: 0.5; background: linear-gradient(to left, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%); }
+            100% { opacity: 0; background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%); }
+        }
+
+        .sheet.flipping-forward .page-face.front .page-shadow {
+            animation: shadow-forward-front 0.8s ease-in-out forwards;
+        }
+
+        .sheet.flipping-forward .page-face.back .page-shadow {
+            animation: shadow-forward-back 0.8s ease-in-out forwards;
+        }
+
+        @keyframes shadow-backward-front {
+            0% { opacity: 0.6; background: linear-gradient(to right, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%); }
+            50% { opacity: 0.5; background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%); }
+            100% { opacity: 0; background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%); }
+        }
+
+        @keyframes shadow-backward-back {
+            0% { opacity: 0; background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%); }
+            50% { opacity: 0.6; background: linear-gradient(to left, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%); }
+            100% { opacity: 0; background: linear-gradient(to left, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%); }
+        }
+
+        .sheet.flipping-backward .page-face.front .page-shadow {
+            animation: shadow-backward-front 0.8s ease-in-out forwards;
+        }
+
+        .sheet.flipping-backward .page-face.back .page-shadow {
+            animation: shadow-backward-back 0.8s ease-in-out forwards;
         }
 
         /* Page faces */
@@ -603,6 +700,11 @@ try {
                     const canvas = document.createElement('canvas');
                     canvas.id = `page-canvas-${leftPageNum}`;
                     backFace.appendChild(canvas);
+
+                    // Add shadow overlay
+                    const shadow = document.createElement('div');
+                    shadow.className = 'page-shadow';
+                    backFace.appendChild(shadow);
                 } else {
                     backFace.classList.add('blank-face');
                 }
@@ -615,6 +717,11 @@ try {
                     const canvas = document.createElement('canvas');
                     canvas.id = `page-canvas-${rightPageNum}`;
                     frontFace.appendChild(canvas);
+
+                    // Add shadow overlay
+                    const shadow = document.createElement('div');
+                    shadow.className = 'page-shadow';
+                    frontFace.appendChild(shadow);
                 } else {
                     frontFace.classList.add('blank-face');
                 }
@@ -696,7 +803,7 @@ try {
                 const totalSheets = this.sheets.length;
 
                 this.sheets.forEach((sheet, idx) => {
-                    sheet.classList.remove('active', 'flipping');
+                    sheet.classList.remove('active', 'flipping-forward', 'flipping-backward');
                     
                     if (idx < this.currentSheetIndex) {
                         // Sheets flipped to the left
@@ -719,14 +826,15 @@ try {
                 if (this.currentSheetIndex >= this.sheets.length - 1) return;
                 
                 const sheet = this.sheets[this.currentSheetIndex];
-                sheet.classList.add('flipping');
+                sheet.classList.remove('flipping-backward');
+                sheet.classList.add('flipping-forward');
                 sheet.style.zIndex = this.sheets.length + 10; // Elevate Z-index in mid-air
-                sheet.classList.add('flipped');
 
                 this.currentSheetIndex++;
                 this.preloadVicinity();
 
                 setTimeout(() => {
+                    sheet.classList.remove('flipping-forward');
                     this.updateZIndices();
                     this.updateButtons();
                 }, 800); // match transition speed (0.8s)
@@ -737,13 +845,14 @@ try {
 
                 this.currentSheetIndex--;
                 const sheet = this.sheets[this.currentSheetIndex];
-                sheet.classList.add('flipping');
+                sheet.classList.remove('flipping-forward');
+                sheet.classList.add('flipping-backward');
                 sheet.style.zIndex = this.sheets.length + 10; // Elevate Z-index in mid-air
-                sheet.classList.remove('flipped');
 
                 this.preloadVicinity();
 
                 setTimeout(() => {
+                    sheet.classList.remove('flipping-backward');
                     this.updateZIndices();
                     this.updateButtons();
                 }, 800);
