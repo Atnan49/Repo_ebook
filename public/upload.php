@@ -117,6 +117,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$isConverted) {
                         // Fallback if GD fails or WebP is not supported, move the original file as is
+                        if (function_exists('imagewebp')) {
+                            $coverName = pathinfo($coverName, PATHINFO_FILENAME) . '.' . $imgExt;
+                            $coverDestPath = COVER_STORAGE . '/' . $coverName;
+                        }
                         move_uploaded_file($coverTmpPath, $coverDestPath);
                     }
                 }

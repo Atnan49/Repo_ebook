@@ -13,9 +13,25 @@ define('DB_USER',    getenv('DB_USER')    ?: 'if0_41988896');
 define('DB_PASS',    getenv('DB_PASS')    ?: 'Atnan231');
 define('DB_CHARSET', 'utf8mb4');
 
-// Base URL & Path — kosongkan untuk deployment root level
-define('BASE_URL',   getenv('BASE_URL') !== false ? getenv('BASE_URL') : '');
-define('ASSET_URL',  getenv('ASSET_URL') !== false ? getenv('ASSET_URL') : '');
+// Base URL & Path — kosongkan untuk deployment root level atau biarkan terdeteksi otomatis
+if (getenv('BASE_URL') !== false) {
+    define('BASE_URL', getenv('BASE_URL'));
+} else {
+    // Deteksi BASE_URL secara otomatis jika tidak diset di environment (mendukung subdirektori lokal seperti XAMPP)
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    $basePath = dirname($scriptName);
+    $basePath = str_replace('\\', '/', $basePath);
+    // Jika script berada di public/index.php atau admin/index.php, kita ambil path induknya
+    if (str_ends_with($basePath, '/public')) {
+        $basePath = substr($basePath, 0, -7);
+    } elseif (str_ends_with($basePath, '/admin')) {
+        $basePath = substr($basePath, 0, -6);
+    }
+    $basePath = rtrim($basePath, '/');
+    define('BASE_URL', $basePath);
+}
+
+define('ASSET_URL',  getenv('ASSET_URL') !== false ? getenv('ASSET_URL') : BASE_URL);
 define('ROOT_PATH',  dirname(__DIR__));
 
 define('STORAGE_PATH', ROOT_PATH . '/storage');

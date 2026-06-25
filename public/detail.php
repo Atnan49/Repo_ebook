@@ -22,18 +22,19 @@ try {
             LEFT JOIN categories c ON e.category_id = c.id
             LEFT JOIN users u ON e.uploaded_by = u.id
             WHERE e.id = :id";
-            
+    $params = [':id' => $id];
     // If not admin and not the uploader, it must be approved
     if (!isAdmin()) {
         if (isLoggedIn()) {
-            $sql .= " AND (e.status = 'approved' OR e.uploaded_by = " . $_SESSION['user_id'] . ")";
+            $sql .= " AND (e.status = 'approved' OR e.uploaded_by = :uid)";
+            $params[':uid'] = $_SESSION['user_id'];
         } else {
             $sql .= " AND e.status = 'approved'";
         }
     }
     
     $stmt = $db->prepare($sql);
-    $stmt->execute([':id' => $id]);
+    $stmt->execute($params);
     $book = $stmt->fetch();
 
     if (!$book) {

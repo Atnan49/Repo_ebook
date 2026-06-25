@@ -39,7 +39,7 @@ docker compose up -d --build
 | Aplikasi    | http://localhost:8080         |
 | phpMyAdmin  | http://localhost:8081         |
 
-> **Catatan:** Akun admin bawaan — email `admin@repo.com`, password `Password`.
+> **Catatan:** Akun admin bawaan — email `admin@repoebook.com`, password `Password`.
 
 ### Opsi B — XAMPP / Manual
 
@@ -52,7 +52,7 @@ docker compose up -d --build
    - Buat database baru bernama `repo_ebook` (atau sesuai keinginan) melalui phpMyAdmin.
    - Import skema awal dari file `database/schema.sql`.
    
-   > **Catatan:** Terdapat akun admin bawaan dalam *schema.sql* dengan email `admin@repo.com` dan password `Password`.
+   > **Catatan:** Terdapat akun admin bawaan dalam *schema.sql* dengan email `admin@repoebook.com` dan password `Password`.
 
 3. **Konfigurasi Database**:
    - Buka file `config/database.php`.

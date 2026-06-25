@@ -54,7 +54,7 @@ $pageTitle = $pageTitle ?? 'Repositori Ebook';
                 </button>
                 <div class="dropdown-menu" id="dropdownMenu">
                     <?php if (isAdmin()): ?>
-                        <a href="<?= ASSET_URL ?>/admin/index.php" class="dropdown-item">
+                        <a href="<?= BASE_URL ?>/admin/index.php" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
                             Dashboard Admin
                         </a>

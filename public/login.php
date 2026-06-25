@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Redirect berdasarkan role
                 if ($user['role'] === 'admin') {
-                    redirect(ASSET_URL . '/admin/index.php');
+                    redirect(BASE_URL . '/admin/index.php');
                 } else {
                     redirect(BASE_URL . '/index.php');
                 }

@@ -36,4 +36,9 @@ if ($id > 0 && in_array($action, ['approve', 'reject'])) {
 }
 
 $redirectPage = $_POST['redirect'] ?? 'index.php';
+// Restrict redirect to safe local admin pages to prevent Open Redirect vulnerability
+$allowedRedirects = ['index.php', 'moderasi.php'];
+if (!in_array($redirectPage, $allowedRedirects)) {
+    $redirectPage = 'index.php';
+}
 redirect($redirectPage);
