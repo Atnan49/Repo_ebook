@@ -39,7 +39,7 @@ if ($uri === '' || $uri === '/index.php') {
     require __DIR__ . '/../public/logout.php';
 } elseif ($uri === '/register.php') {
     require __DIR__ . '/../public/register.php';
-} elseif ($uri === '/admin') {
+} elseif ($uri === '/admin' || $uri === '/admin/index.php') {
     require __DIR__ . '/../admin/index.php';
 } elseif ($uri === '/admin/moderasi.php') {
     require __DIR__ . '/../admin/moderasi.php';
