@@ -3,10 +3,10 @@
 require_once __DIR__ . '/../config/database.php';
 
 class CookieSessionHandler implements SessionHandlerInterface {
-    private $cookieName = 'repo_ebook_session';
-    private $key;
+    private string $cookieName = 'repo_ebook_session';
+    private string $key;
 
-    public function __construct($key) {
+    public function __construct(string $key) {
         $this->key = hash('sha256', $key, true);
     }
 
@@ -53,7 +53,7 @@ class CookieSessionHandler implements SessionHandlerInterface {
         return 0;
     }
 
-    private function encrypt($data) {
+    private function encrypt(string $data): string {
         $cipher = "AES-256-CBC";
         $ivlen = openssl_cipher_iv_length($cipher);
         $iv = openssl_random_pseudo_bytes($ivlen);
@@ -62,7 +62,7 @@ class CookieSessionHandler implements SessionHandlerInterface {
         return base64_encode($iv . $hmac . $ciphertext);
     }
 
-    private function decrypt($encryptedData) {
+    private function decrypt(string $encryptedData): string|false {
         $cipher = "AES-256-CBC";
         $raw = base64_decode($encryptedData);
         $ivlen = openssl_cipher_iv_length($cipher);
