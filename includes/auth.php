@@ -1,7 +1,89 @@
 <?php
 
+require_once __DIR__ . '/../config/database.php';
+
+class CookieSessionHandler implements SessionHandlerInterface {
+    private $cookieName = 'repo_ebook_session';
+    private $key;
+
+    public function __construct($key) {
+        $this->key = hash('sha256', $key, true);
+    }
+
+    public function open(string $path, string $name): bool {
+        return true;
+    }
+
+    public function close(): bool {
+        return true;
+    }
+
+    public function read(string $id): string|false {
+        if (!isset($_COOKIE[$this->cookieName])) {
+            return '';
+        }
+        $data = $this->decrypt($_COOKIE[$this->cookieName]);
+        return $data !== false ? $data : '';
+    }
+
+    public function write(string $id, string $data): bool {
+        $encrypted = $this->encrypt($data);
+        $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+        return setcookie($this->cookieName, $encrypted, [
+            'expires' => time() + 7 * 24 * 3600, // 1 week
+            'path' => '/',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
+
+    public function destroy(string $id): bool {
+        $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+        return setcookie($this->cookieName, '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
+
+    public function gc(int $max_lifetime): int|false {
+        return 0;
+    }
+
+    private function encrypt($data) {
+        $cipher = "AES-256-CBC";
+        $ivlen = openssl_cipher_iv_length($cipher);
+        $iv = openssl_random_pseudo_bytes($ivlen);
+        $ciphertext = openssl_encrypt($data, $cipher, $this->key, OPENSSL_RAW_DATA, $iv);
+        $hmac = hash_hmac('sha256', $ciphertext, $this->key, true);
+        return base64_encode($iv . $hmac . $ciphertext);
+    }
+
+    private function decrypt($encryptedData) {
+        $cipher = "AES-256-CBC";
+        $raw = base64_decode($encryptedData);
+        $ivlen = openssl_cipher_iv_length($cipher);
+        if (strlen($raw) < $ivlen + 32) return false;
+        $iv = substr($raw, 0, $ivlen);
+        $hmac = substr($raw, $ivlen, 32);
+        $ciphertext = substr($raw, $ivlen + 32);
+        
+        $calculatedHmac = hash_hmac('sha256', $ciphertext, $this->key, true);
+        if (!hash_equals($hmac, $calculatedHmac)) {
+            return false;
+        }
+        
+        return openssl_decrypt($ciphertext, $cipher, $this->key, OPENSSL_RAW_DATA, $iv);
+    }
+}
 
 if (session_status() === PHP_SESSION_NONE) {
+    $sessionSecret = (defined('SUPABASE_KEY') && SUPABASE_KEY) ? SUPABASE_KEY : 'RepoEbookDefaultSecretKey123!';
+    $handler = new CookieSessionHandler($sessionSecret);
+    session_set_save_handler($handler, true);
     session_start();
 }
 
