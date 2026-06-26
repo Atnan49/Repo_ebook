@@ -50,6 +50,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
+        $pdfName = '';
+        $pdfSize = 0;
+        $pdfUploaded = false;
+        $coverName = null;
+        $imgExt = '';
+
         if ($isClientUpload) {
             $pdfName = $clientPdfName;
             $pdfSize = $clientPdfSize;
