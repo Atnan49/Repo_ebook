@@ -37,106 +37,127 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($title)) $errors[] = 'Judul wajib diisi.';
     if (empty($author)) $errors[] = 'Penulis wajib diisi.';
     if ($category_id <= 0) $errors[] = 'Kategori wajib dipilih.';
-    if (empty($_FILES['pdf_file']['name'])) $errors[] = 'File PDF wajib diunggah.';
+
+    // Check if client-side upload was used
+    $clientPdfName = trim($_POST['client_pdf_name'] ?? '');
+    $clientCoverName = trim($_POST['client_cover_name'] ?? '');
+    $clientPdfSize = intval($_POST['client_pdf_size'] ?? 0);
+    
+    $isClientUpload = StorageHelper::isSupabaseEnabled() && !empty($clientPdfName);
+
+    if (!$isClientUpload && empty($_FILES['pdf_file']['name'])) {
+        $errors[] = 'File PDF wajib diunggah.';
+    }
 
     if (empty($errors)) {
-        // PDF File Upload Handling
-        $pdf = $_FILES['pdf_file'];
-        $pdfExt = strtolower(pathinfo($pdf['name'], PATHINFO_EXTENSION));
+        if ($isClientUpload) {
+            $pdfName = $clientPdfName;
+            $pdfSize = $clientPdfSize;
+            $coverName = !empty($clientCoverName) ? $clientCoverName : null;
+            $pdfUploaded = true;
+        } else {
+            // Standard server-side upload
+            $pdf = $_FILES['pdf_file'];
+            $pdfExt = strtolower(pathinfo($pdf['name'], PATHINFO_EXTENSION));
 
-        if ($pdf['error'] !== UPLOAD_ERR_OK) {
-            $errors[] = 'Gagal mengunggah file PDF.';
-        } elseif ($pdfExt !== 'pdf') {
-            $errors[] = 'File harus berformat PDF.';
-        } elseif ($pdf['size'] > 50 * 1024 * 1024) { // 50MB Max
-            $errors[] = 'Ukuran file PDF maksimal 50MB.';
-        }
+            if ($pdf['error'] !== UPLOAD_ERR_OK) {
+                $errors[] = 'Gagal mengunggah file PDF.';
+            } elseif ($pdfExt !== 'pdf') {
+                $errors[] = 'File harus berformat PDF.';
+            } elseif ($pdf['size'] > 50 * 1024 * 1024) { // 50MB Max
+                $errors[] = 'Ukuran file PDF maksimal 50MB.';
+            }
 
-        // Cover Image Upload Handling (Optional)
-        $coverName = null;
-        $imgExt = '';
-        if (!empty($_FILES['cover_image']['name'])) {
-            $img = $_FILES['cover_image'];
-            $imgExt = strtolower(pathinfo($img['name'], PATHINFO_EXTENSION));
-            $allowedImg = ['jpg', 'jpeg', 'png', 'webp'];
+            // Cover Image Upload Handling (Optional)
+            $coverName = null;
+            $imgExt = '';
+            if (!empty($_FILES['cover_image']['name'])) {
+                $img = $_FILES['cover_image'];
+                $imgExt = strtolower(pathinfo($img['name'], PATHINFO_EXTENSION));
+                $allowedImg = ['jpg', 'jpeg', 'png', 'webp'];
 
-            if ($img['error'] !== UPLOAD_ERR_OK) {
-                $errors[] = 'Gagal mengunggah cover image.';
-            } elseif (!in_array($imgExt, $allowedImg)) {
-                $errors[] = 'Format cover harus JPG, PNG, atau WEBP.';
-            } elseif ($img['size'] > 5 * 1024 * 1024) { // 5MB Max
-                $errors[] = 'Ukuran cover maksimal 5MB.';
-            } else {
-                // Check if WebP conversion is supported by GD library
-                if (function_exists('imagewebp')) {
-                    $coverName = uniqid('cover_') . '.webp';
+                if ($img['error'] !== UPLOAD_ERR_OK) {
+                    $errors[] = 'Gagal mengunggah cover image.';
+                } elseif (!in_array($imgExt, $allowedImg)) {
+                    $errors[] = 'Format cover harus JPG, PNG, atau WEBP.';
+                } elseif ($img['size'] > 5 * 1024 * 1024) { // 5MB Max
+                    $errors[] = 'Ukuran cover maksimal 5MB.';
                 } else {
-                    $coverName = uniqid('cover_') . '.' . $imgExt;
+                    // Check if WebP conversion is supported by GD library
+                    if (function_exists('imagewebp')) {
+                        $coverName = uniqid('cover_') . '.webp';
+                    } else {
+                        $coverName = uniqid('cover_') . '.' . $imgExt;
+                    }
                 }
             }
         }
 
         if (empty($errors)) {
-            // Move PDF
-            $pdfName = uniqid('ebook_') . '.pdf';
-            
-            $pdfUploaded = StorageHelper::upload($pdf['tmp_name'], $pdfName, 'pdfs');
+            if (!$isClientUpload) {
+                // Move PDF
+                $pdfName = uniqid('ebook_') . '.pdf';
+                $pdfUploaded = StorageHelper::upload($pdf['tmp_name'], $pdfName, 'pdfs');
+                $pdfSize = $pdf['size'];
 
-            if ($pdfUploaded) {
-                // Move Cover
-                if ($coverName && !empty($_FILES['cover_image']['tmp_name'])) {
-                    $coverTmpPath = $_FILES['cover_image']['tmp_name'];
-                    
-                    // Temp destination dir
-                    $tempDestDir = StorageHelper::isSupabaseEnabled() ? sys_get_temp_dir() : COVER_STORAGE;
-                    if (!is_dir($tempDestDir)) {
-                        mkdir($tempDestDir, 0755, true);
-                    }
-                    $coverDestPath = $tempDestDir . '/' . $coverName;
-
-                    // Auto convert to WebP if supported by GD
-                    $image = false;
-                    $isConverted = false;
-
-                    if (function_exists('imagewebp')) {
-                        if (in_array($imgExt, ['jpg', 'jpeg'])) {
-                            $image = @imagecreatefromjpeg($coverTmpPath);
-                        } elseif ($imgExt === 'png') {
-                            $image = @imagecreatefrompng($coverTmpPath);
-                            if ($image) {
-                                imagepalettetotruecolor($image);
-                                imagealphablending($image, false);
-                            }
-                        } elseif ($imgExt === 'webp') {
-                            $image = @imagecreatefromwebp($coverTmpPath);
-                        }
-
-                        if ($image !== false) {
-                            $isConverted = @imagewebp($image, $coverDestPath, 85);
-                            imagedestroy($image);
-                        }
-                    }
-
-                    if ($isConverted) {
-                        if (StorageHelper::isSupabaseEnabled()) {
-                            StorageHelper::upload($coverDestPath, $coverName, 'covers');
-                            @unlink($coverDestPath);
-                        }
-                    } else {
-                        // Fallback if GD fails or WebP is not supported
-                        if (function_exists('imagewebp')) {
-                            $coverName = pathinfo($coverName, PATHINFO_FILENAME) . '.' . $imgExt;
-                            $coverDestPath = $tempDestDir . '/' . $coverName;
-                        }
+                if ($pdfUploaded) {
+                    // Move Cover
+                    if ($coverName && !empty($_FILES['cover_image']['tmp_name'])) {
+                        $coverTmpPath = $_FILES['cover_image']['tmp_name'];
                         
-                        if (StorageHelper::isSupabaseEnabled()) {
-                            StorageHelper::upload($coverTmpPath, $coverName, 'covers');
+                        // Temp destination dir
+                        $tempDestDir = StorageHelper::isSupabaseEnabled() ? sys_get_temp_dir() : COVER_STORAGE;
+                        if (!is_dir($tempDestDir)) {
+                            mkdir($tempDestDir, 0755, true);
+                        }
+                        $coverDestPath = $tempDestDir . '/' . $coverName;
+
+                        // Auto convert to WebP if supported by GD
+                        $image = false;
+                        $isConverted = false;
+
+                        if (function_exists('imagewebp')) {
+                            if (in_array($imgExt, ['jpg', 'jpeg'])) {
+                                $image = @imagecreatefromjpeg($coverTmpPath);
+                            } elseif ($imgExt === 'png') {
+                                $image = @imagecreatefrompng($coverTmpPath);
+                                if ($image) {
+                                    imagepalettetotruecolor($image);
+                                    imagealphablending($image, false);
+                                }
+                            } elseif ($imgExt === 'webp') {
+                                $image = @imagecreatefromwebp($coverTmpPath);
+                            }
+
+                            if ($image !== false) {
+                                $isConverted = @imagewebp($image, $coverDestPath, 85);
+                                imagedestroy($image);
+                            }
+                        }
+
+                        if ($isConverted) {
+                            if (StorageHelper::isSupabaseEnabled()) {
+                                StorageHelper::upload($coverDestPath, $coverName, 'covers');
+                                @unlink($coverDestPath);
+                            }
                         } else {
-                            move_uploaded_file($coverTmpPath, $coverDestPath);
+                            // Fallback if GD fails or WebP is not supported
+                            if (function_exists('imagewebp')) {
+                                $coverName = pathinfo($coverName, PATHINFO_FILENAME) . '.' . $imgExt;
+                                $coverDestPath = $tempDestDir . '/' . $coverName;
+                            }
+                            
+                            if (StorageHelper::isSupabaseEnabled()) {
+                                StorageHelper::upload($coverTmpPath, $coverName, 'covers');
+                            } else {
+                                move_uploaded_file($coverTmpPath, $coverDestPath);
+                            }
                         }
                     }
                 }
+            }
 
+            if ($pdfUploaded) {
                 // Generate slug
                 $slug = preg_replace('/[^a-z0-9]+/i', '-', strtolower($title));
                 $slug = trim($slug, '-') . '-' . uniqid();
@@ -151,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':description' => $description,
                         ':cover_image' => $coverName,
                         ':pdf_file' => $pdfName,
-                        ':file_size' => $pdf['size'],
+                        ':file_size' => $pdfSize,
                         ':category_id' => $category_id,
                         ':uploaded_by' => $_SESSION['user_id']
                     ]);
@@ -178,6 +199,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title><?= e($pageTitle) ?></title>
     <link rel="icon" type="image/x-icon" href="<?= ASSET_URL ?>/favicon.ico">
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/style.css">
+    
+    <script>
+        const SUPABASE_ENABLED = <?= StorageHelper::isSupabaseEnabled() ? 'true' : 'false' ?>;
+        const SUPABASE_URL = <?= json_encode(SUPABASE_URL) ?>;
+        const SUPABASE_KEY = <?= json_encode(SUPABASE_KEY) ?>;
+    </script>
     <style>
         .upload-container {
             max-width: 800px;
@@ -419,6 +446,130 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     <script src="<?= ASSET_URL ?>/assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            if (!form) return;
+
+            form.addEventListener('submit', async (e) => {
+                if (typeof SUPABASE_ENABLED !== 'undefined' && SUPABASE_ENABLED) {
+                    const pdfInput = document.getElementById('pdf_file');
+                    const coverInput = document.getElementById('cover_image');
+
+                    if (document.getElementById('client_pdf_name')) {
+                        return; // Form has already uploaded files, submit normally
+                    }
+
+                    if (pdfInput && pdfInput.files.length > 0) {
+                        e.preventDefault(); // Stop native submit
+
+                        const submitBtn = form.querySelector('.btn-upload-submit');
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.disabled = true;
+                        
+                        // Spinner styling
+                        submitBtn.innerHTML = `
+                            <svg class="spinner" style="animation: spin 1s linear infinite; margin-right: 8px; width: 18px; height: 18px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)"></circle>
+                                <path d="M4 12a8 8 0 0 1 8-8" stroke="#fff"></path>
+                            </svg>
+                            Mengunggah langsung ke Cloud...
+                        `;
+
+                        try {
+                            const pdfFile = pdfInput.files[0];
+                            const pdfName = 'ebook_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now() + '.pdf';
+                            
+                            // Upload PDF directly to Supabase
+                            const pdfUrl = `${SUPABASE_URL.replace(/\/$/, '')}/storage/v1/object/pdfs/${pdfName}`;
+                            const pdfResponse = await fetch(pdfUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'apikey': SUPABASE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                    'Content-Type': 'application/pdf'
+                                },
+                                body: pdfFile
+                            });
+
+                            if (!pdfResponse.ok) {
+                                const errorData = await pdfResponse.json().catch(() => ({}));
+                                throw new Error(errorData.message || 'Gagal mengunggah file PDF ke Cloud Storage.');
+                            }
+
+                            // Upload Cover directly to Supabase if provided
+                            let coverName = '';
+                            if (coverInput && coverInput.files.length > 0) {
+                                const coverFile = coverInput.files[0];
+                                const coverExt = coverFile.name.split('.').pop().toLowerCase();
+                                coverName = 'cover_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now() + '.' + coverExt;
+
+                                const coverUrl = `${SUPABASE_URL.replace(/\/$/, '')}/storage/v1/object/covers/${coverName}`;
+                                const coverResponse = await fetch(coverUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'apikey': SUPABASE_KEY,
+                                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                        'Content-Type': coverFile.type
+                                    },
+                                    body: coverFile
+                                });
+
+                                if (!coverResponse.ok) {
+                                    const errorData = await coverResponse.json().catch(() => ({}));
+                                    throw new Error(errorData.message || 'Gagal mengunggah Cover Image ke Cloud Storage.');
+                                }
+                            }
+
+                            // Append hidden fields to the form
+                            const hiddenPdf = document.createElement('input');
+                            hiddenPdf.type = 'hidden';
+                            hiddenPdf.id = 'client_pdf_name';
+                            hiddenPdf.name = 'client_pdf_name';
+                            hiddenPdf.value = pdfName;
+                            form.appendChild(hiddenPdf);
+
+                            const hiddenPdfSize = document.createElement('input');
+                            hiddenPdfSize.type = 'hidden';
+                            hiddenPdfSize.name = 'client_pdf_size';
+                            hiddenPdfSize.value = pdfFile.size;
+                            form.appendChild(hiddenPdfSize);
+
+                            if (coverName) {
+                                const hiddenCover = document.createElement('input');
+                                hiddenCover.type = 'hidden';
+                                hiddenCover.name = 'client_cover_name';
+                                hiddenCover.value = coverName;
+                                form.appendChild(hiddenCover);
+                            }
+
+                            // Bypass HTML required validators and clear file payloads to prevent Vercel 413 error
+                            pdfInput.removeAttribute('required');
+                            pdfInput.value = '';
+                            if (coverInput) {
+                                coverInput.removeAttribute('required');
+                                coverInput.value = '';
+                            }
+
+                            // Submit the form containing only metadata and filenames
+                            form.submit();
+                        } catch (error) {
+                            console.error('Error during upload:', error);
+                            alert('Terjadi kesalahan saat mengunggah: ' + error.message);
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 
 </html>
