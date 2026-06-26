@@ -8,8 +8,10 @@ header("Content-Type: application/xml; charset=utf-8");
 
 require_once __DIR__ . '/../config/database.php';
 
-// Get base domain
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+// Get base domain — Vercel forwards original protocol via X-Forwarded-Proto
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+$protocol = $isHttps ? 'https://' : 'https://'; // Default to https for production
 $host = $_SERVER['HTTP_HOST'] ?? 'repo-ebook.vercel.app';
 $baseUrl = $protocol . $host;
 
