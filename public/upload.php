@@ -377,7 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     <?php endif; ?>
 
-                    <form action="" method="POST" enctype="multipart/form-data">
+                    <form action="" method="POST" enctype="multipart/form-data" id="uploadForm">
                         <input type="hidden" name="csrf_token" value="<?= csrfToken() ?>">
 
                         <div class="form-row">
@@ -454,7 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="<?= ASSET_URL ?>/assets/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const form = document.querySelector('form');
+            const form = document.getElementById('uploadForm');
             if (!form) return;
 
             form.addEventListener('submit', async (e) => {
