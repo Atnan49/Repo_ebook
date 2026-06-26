@@ -23,6 +23,9 @@ if ($uri === '' || $uri === '/index.php') {
     header('Content-Type: text/html; charset=utf-8');
     readfile(__DIR__ . '/../public/googlebbd17e8f2b60fb69.html');
     exit;
+} elseif ($uri === '/test-env.php') {
+    require __DIR__ . '/../public/test-env.php';
+    exit;
 } elseif ($uri === '/read.php') {
     require __DIR__ . '/../public/read.php';
 } elseif ($uri === '/upload.php') {
