@@ -60,6 +60,9 @@ try {
             $_SESSION['read_' . $id] = true;
         }
 
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
         header('Content-Disposition: inline; filename="' . str_replace('"', '', basename($book['title'])) . '.pdf"');
         header('Content-Transfer-Encoding: binary');
         header('Accept-Ranges: bytes');
