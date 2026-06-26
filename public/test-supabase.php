@@ -62,6 +62,28 @@ if (!empty($fileName)) {
     }
     echo "Body length: " . strlen($contentPublic) . " bytes\n";
     echo "Body snippet: " . substr($contentPublic, 0, 200) . "\n\n";
+
+    // Test 3: Authenticated with both apikey and Authorization headers
+    $urlAuthBoth = rtrim(SUPABASE_URL, '/') . "/storage/v1/object/authenticated/pdfs/" . $fileName;
+    echo "3. Testing Authenticated with apikey + Auth headers URL: $urlAuthBoth\n";
+    $opts = [
+        'http' => [
+            'method' => 'GET',
+            'header' => [
+                "apikey: " . SUPABASE_KEY,
+                "Authorization: Bearer " . SUPABASE_KEY
+            ],
+            'ignore_errors' => true
+        ]
+    ];
+    $context = stream_context_create($opts);
+    $contentBoth = file_get_contents($urlAuthBoth, false, $context);
+    echo "Response Code: " . ($http_response_header[0] ?? 'Unknown') . "\n";
+    foreach ($http_response_header as $h) {
+        echo "  $h\n";
+    }
+    echo "Body length: " . strlen($contentBoth) . " bytes\n";
+    echo "Body snippet: " . substr($contentBoth, 0, 200) . "\n\n";
 } else {
     echo "\nNo files to test.\n";
 }
