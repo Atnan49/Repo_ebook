@@ -91,6 +91,50 @@ class StorageHelper {
     }
 
     /**
+     * Mendapatkan Signed URL untuk berkas privat di Supabase Storage
+     */
+    public static function getSignedUrl(string $fileName, string $bucket, int $expiresIn = 300): string|false {
+        if (self::isSupabaseEnabled()) {
+            $url = rtrim(constant('SUPABASE_URL'), '/') . "/storage/v1/object/sign/" . $bucket . "/" . $fileName;
+            $body = json_encode(['expiresIn' => $expiresIn]);
+            
+            $opts = [
+                'http' => [
+                    'method' => 'POST',
+                    'header' => [
+                        "apikey: " . constant('SUPABASE_KEY'),
+                        "Authorization: Bearer " . constant('SUPABASE_KEY'),
+                        "Content-Type: application/json",
+                        "Content-Length: " . strlen($body)
+                    ],
+                    'content' => $body,
+                    'ignore_errors' => true
+                ]
+            ];
+            $context = stream_context_create($opts);
+            $response = @file_get_contents($url, false, $context);
+            if ($response === false) return false;
+            
+            $data = json_decode($response, true);
+            $signedUrl = $data['signedURL'] ?? $data['signedUrl'] ?? null;
+            
+            if ($signedUrl) {
+                // Jika itu relative path, gabungkan dengan SUPABASE_URL
+                if (strpos($signedUrl, 'http') !== 0) {
+                    // Pastikan path memiliki prefix /storage/v1/
+                    if (strpos($signedUrl, '/storage/v1/') !== 0 && strpos($signedUrl, 'storage/v1/') !== 0) {
+                        $signedUrl = rtrim(constant('SUPABASE_URL'), '/') . '/storage/v1/' . ltrim($signedUrl, '/');
+                    } else {
+                        $signedUrl = rtrim(constant('SUPABASE_URL'), '/') . '/' . ltrim($signedUrl, '/');
+                    }
+                }
+                return $signedUrl;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Mengalirkan (streaming) berkas PDF secara aman ke browser
      */
     public static function streamPdf(string $fileName) {
@@ -104,6 +148,7 @@ class StorageHelper {
                         "apikey: " . constant('SUPABASE_KEY'),
                         "Authorization: Bearer " . constant('SUPABASE_KEY')
                     ],
+                    'follow_location' => 0, // Menonaktifkan redirect otomatis
                     'ignore_errors' => true
                 ]
             ];
@@ -111,16 +156,45 @@ class StorageHelper {
             $content = @file_get_contents($url, false, $context);
             
             $statusCode = 0;
+            $redirectUrl = null;
             if (isset($http_response_header)) {
                 foreach ($http_response_header as $header) {
                     if (preg_match('/^HTTP\/\d\.\d\s+(\d+)/i', $header, $matches)) {
                         $statusCode = intval($matches[1]);
-                        break;
+                    }
+                    if (preg_match('/^Location:\s*(.+)$/i', $header, $matches)) {
+                        $redirectUrl = trim($matches[1]);
+                    }
+                }
+            }
+
+            // Jika mendapatkan respon redirect (301, 302, 307) dan ada Location header
+            if (($statusCode === 301 || $statusCode === 302 || $statusCode === 307) && !empty($redirectUrl)) {
+                // Ambil file dari URL redirect (S3/R2 pre-signed URL) TANPA header authentication
+                $optsRedirect = [
+                    'http' => [
+                        'method' => 'GET',
+                        'ignore_errors' => true
+                    ]
+                ];
+                $contextRedirect = stream_context_create($optsRedirect);
+                $content = @file_get_contents($redirectUrl, false, $contextRedirect);
+                
+                $statusCode = 0;
+                if (isset($http_response_header)) {
+                    foreach ($http_response_header as $header) {
+                        if (preg_match('/^HTTP\/\d\.\d\s+(\d+)/i', $header, $matches)) {
+                            $statusCode = intval($matches[1]);
+                            break;
+                        }
                     }
                 }
             }
 
             if ($statusCode === 200 && $content !== false) {
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_write_close(); // Simpan dan tutup session agar tidak menulis cookie baru setelah body dikirim
+                }
                 header('Content-Type: application/pdf');
                 header('Content-Length: ' . strlen($content));
                 echo $content;

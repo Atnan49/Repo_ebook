@@ -47,6 +47,10 @@ if ($uri === '' || $uri === '/index.php') {
     require __DIR__ . '/../admin/action.php';
 } elseif ($uri === '/test-supabase.php') {
     require __DIR__ . '/../public/test-supabase.php';
+} elseif ($uri === '/debug-supabase.php') {
+    require __DIR__ . '/../public/debug-supabase.php';
+} elseif ($uri === '/debug-db.php') {
+    require __DIR__ . '/../public/debug-db.php';
 } else {
     // Return 404 for unmatched routes
     http_response_code(404);

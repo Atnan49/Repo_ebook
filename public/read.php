@@ -60,6 +60,19 @@ try {
             $_SESSION['read_' . $id] = true;
         }
 
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close(); // Simpan dan tutup session sebelum streaming file
+        }
+
+        if (StorageHelper::isSupabaseEnabled()) {
+            $signedUrl = StorageHelper::getSignedUrl($book['pdf_file'], 'pdfs', 300);
+            if ($signedUrl) {
+                // Redirect langsung ke URL Signed privat Supabase (melewati Vercel Payload Limit 4.5MB)
+                header("Location: " . $signedUrl);
+                exit;
+            }
+        }
+
         if (ob_get_level()) {
             ob_end_clean();
         }
