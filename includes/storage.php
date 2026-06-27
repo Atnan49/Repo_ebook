@@ -43,6 +43,7 @@ class StorageHelper {
                 'http' => [
                     'method' => 'POST',
                     'header' => [
+                        "apikey: " . constant('SUPABASE_KEY'),
                         "Authorization: Bearer " . constant('SUPABASE_KEY'),
                         "Content-Type: " . self::getMimeType($fileName),
                         "Content-Length: " . strlen($content)
@@ -100,19 +101,33 @@ class StorageHelper {
                 'http' => [
                     'method' => 'GET',
                     'header' => [
+                        "apikey: " . constant('SUPABASE_KEY'),
                         "Authorization: Bearer " . constant('SUPABASE_KEY')
-                    ]
+                    ],
+                    'ignore_errors' => true
                 ]
             ];
             $context = stream_context_create($opts);
             $content = @file_get_contents($url, false, $context);
-            if ($content !== false) {
+            
+            $statusCode = 0;
+            if (isset($http_response_header)) {
+                foreach ($http_response_header as $header) {
+                    if (preg_match('/^HTTP\/\d\.\d\s+(\d+)/i', $header, $matches)) {
+                        $statusCode = intval($matches[1]);
+                        break;
+                    }
+                }
+            }
+
+            if ($statusCode === 200 && $content !== false) {
                 header('Content-Type: application/pdf');
                 header('Content-Length: ' . strlen($content));
                 echo $content;
                 exit;
             } else {
-                die("Gagal mengambil file PDF dari Supabase Storage.");
+                http_response_code($statusCode ?: 500);
+                die("Gagal mengambil file PDF dari Supabase Storage (Status Code: " . $statusCode . ").");
             }
         } else {
             // Streaming lokal
@@ -137,6 +152,7 @@ class StorageHelper {
                 'http' => [
                     'method' => 'DELETE',
                     'header' => [
+                        "apikey: " . constant('SUPABASE_KEY'),
                         "Authorization: Bearer " . constant('SUPABASE_KEY')
                     ],
                     'ignore_errors' => true

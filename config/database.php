@@ -57,6 +57,8 @@ if (getenv('BASE_URL') !== false) {
         $basePath = substr($basePath, 0, -7);
     } elseif (str_ends_with($basePath, '/admin')) {
         $basePath = substr($basePath, 0, -6);
+    } elseif (str_ends_with($basePath, '/api')) {
+        $basePath = substr($basePath, 0, -4);
     }
     $basePath = rtrim($basePath, '/');
     define('BASE_URL', $basePath);
