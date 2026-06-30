@@ -155,6 +155,13 @@ function loginUser(array $user): void
 function logoutUser(): void
 {
     $_SESSION = [];
+    
+    // Hapus custom session cookie dari array $_COOKIE agar tidak dibaca kembali
+    // jika session_start() dipanggil lagi dalam request yang sama.
+    if (isset($_COOKIE['repo_ebook_session'])) {
+        unset($_COOKIE['repo_ebook_session']);
+    }
+
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
         setcookie(
